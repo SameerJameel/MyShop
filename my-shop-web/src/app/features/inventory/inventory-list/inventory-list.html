@@ -1,0 +1,84 @@
+<div class="inventory-sessions-page" dir="rtl">
+    <div class="header">
+      <h2>عمليات الجرد</h2>
+      <button class="btn" routerLink="/inventory">الذهاب لجرد جديد</button>
+    </div>
+  
+    <div *ngIf="loading" class="loading">جارِ التحميل...</div>
+  
+    <div *ngIf="!loading && !inventories.length" class="empty">
+      لا توجد عمليات جرد محفوظة.
+    </div>
+  
+    <div class="table-wrapper" *ngIf="!loading && inventories.length">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>التاريخ</th>
+            <th>الاسم</th>
+            <th>عدد الأصناف</th>
+            <th>إجمالي القيمة</th>
+            <th>أنشئ بواسطة</th>
+            <th>تفاصيل</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inv of inventories; index as i">
+            <td>{{ i + 1 }}</td>
+            <td>{{ inv.date | date:'short' }}</td>
+            <td>{{ inv.name }}</td>
+            <td>{{ inv.itemsCount }}</td>
+            <td>{{ inv.totalAmount | number:'1.2-2' }}</td>
+            <td>{{ inv.createdBy || '-' }}</td>
+            <td>
+              <button class="btn link" (click)="openDetails(inv.id)">عرض</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+    <!-- تفاصيل جرد -->
+    <div class="details-panel" *ngIf="selected">
+      <div class="details-header">
+        <h3>تفاصيل الجرد: {{ selected.name }}</h3>
+        <button class="close-btn" (click)="closeDetails()">×</button>
+      </div>
+  
+      <div class="details-meta">
+        <div>التاريخ: {{ selected.date | date:'short' }}</div>
+        <div>إجمالي القيمة: {{ selected.totalAmount | number:'1.2-2' }}</div>
+        <div>أنشئ بواسطة: {{ selected.createdBy || '-' }}</div>
+        <div>الملاحظات: {{ selected.notes || '-' }}</div>
+      </div>
+  
+      <div class="details-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الصنف</th>
+              <th>الوحدة</th>
+              <th>المجموعة</th>
+              <th>الكمية</th>
+              <th>سعر البيع</th>
+              <th>المجموع</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of selected.lines; index as i">
+              <td>{{ i + 1 }}</td>
+              <td>{{ l.itemName }}</td>
+              <td>{{ l.unit || '-' }}</td>
+              <td>{{ l.categoryName || '-' }}</td>
+              <td>{{ l.quantity }}</td>
+              <td>{{ l.salePrice | number:'1.2-2' }}</td>
+              <td>{{ l.totalPrice | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  

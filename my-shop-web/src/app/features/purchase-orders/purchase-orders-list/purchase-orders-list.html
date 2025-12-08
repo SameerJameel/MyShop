@@ -1,0 +1,191 @@
+<div class="po-page" dir="rtl">
+  <div class="page-header">
+    <div>
+      <h1>طلبات الشراء</h1>
+      <p class="subtitle">إدارة طلبات شراء البضاعة من الموردين.</p>
+    </div>
+    <button class="btn primary" (click)="openAdd()">طلبية جديدة</button>
+  </div>
+
+  <div *ngIf="loading" class="info-row">جارِ تحميل الطلبيات...</div>
+
+  <div *ngIf="!loading && !filteredOrders.length" class="empty-row">
+    لا توجد طلبات بعد. اضغط على <strong>طلبية جديدة</strong> لإضافة أول طلب.
+  </div>
+
+  <div class="filters-row" *ngIf="!loading">
+    <div class="filter">
+      <label>الفترة:</label>
+      <select [(ngModel)]="filterPeriod">
+        <option value="all">الكل</option>
+        <option value="day">يومي</option>
+        <option value="week">أسبوعي</option>
+        <option value="month">شهري</option>
+        <option value="year">سنوي</option>
+      </select>
+    </div>
+  
+    <div class="filter">
+      <label>تاريخ الأساس:</label>
+      <input type="date" [(ngModel)]="filterDate" />
+    </div>
+  
+    <div class="filter">
+      <label>المورد:</label>
+      <input type="text" [(ngModel)]="filterVendor" placeholder="بحث باسم المورد" />
+    </div>
+  </div>
+
+  <!-- جدول الطلبات -->
+  <div class="table-wrapper" *ngIf="!loading && filteredOrders.length">
+    <table class="tbl po-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>التاريخ</th>
+          <th>المورد</th>
+          <th>عدد الأصناف</th>
+          <th>ملاحظات</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of filteredOrders; let i = index">
+          <td data-label="#"> {{ o.id }} </td>
+          <td data-label="التاريخ">
+            {{ o.orderDate | date: 'yyyy-MM-dd' }}
+          </td>
+          <td data-label="المورد">
+            {{ o.vendor?.name || 'بدون مورد' }}
+          </td>
+          <td data-label="عدد الأصناف">
+            {{ o.lines?.length || 0 }}
+          </td>
+          <td data-label="ملاحظات">
+            {{ o.notes }}
+          </td>
+          <td data-label="الحالة">
+            {{ o.status }}
+          </td>
+          <td data-label="إجراءات" class="actions-cell">
+            <button class="btn link" (click)="openEdit(o)">تعديل</button>
+            <button class="btn link danger" (click)="delete(o)">حذف</button>
+            <button
+              class="btn link whatsapp"
+              (click)="sendWhatsApp(o)"
+              title="إرسال الطلبية عبر واتساب"
+            >
+              واتساب
+            </button>
+            <button class="btn link success"
+            *ngIf="o.status !== 'Received'"
+            (click)="markAsReceived(o)">
+      استلام
+    </button>
+  
+    <span class="badge badge--success" *ngIf="o.status === 'Received'">
+      مستلمة
+    </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Popup form -->
+  <div class="popup-bg" *ngIf="isFormOpen">
+    <div class="popup">
+      <div class="popup-head">
+        <h2>{{ isEditMode ? 'تعديل طلبية' : 'طلبية جديدة' }}</h2>
+        <button type="button" class="close" (click)="closeForm()">×</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form">
+        <div class="form-body">
+          <div class="row">
+            <label>المورد (اختياري)</label>
+            <select formControlName="vendorId">
+              <option [ngValue]="null">بدون مورد محدد</option>
+              <option *ngFor="let v of vendors" [ngValue]="v.id">
+                {{ v.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>تاريخ الطلبية</label>
+              <input type="date" formControlName="orderDate" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label>ملاحظات عامة</label>
+            <textarea rows="2" formControlName="notes"></textarea>
+          </div>
+          <h3 class="section-title">الأصناف المطلوبة</h3>
+
+          <div class="table-wrapper inner">
+            <table class="tbl lines-table">
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>الكمية</th>
+                  <th>ملاحظة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody formArrayName="lines">
+                <tr
+                  *ngFor="let line of lines.controls; let i = index"
+                  [formGroupName]="i"
+                >
+                  <td data-label="الصنف">
+                    <select formControlName="itemId">
+                      <option [ngValue]="null">اختر صنف</option>
+                      <option *ngFor="let it of items" [ngValue]="it.id">
+                        {{ it.name }}
+                      </option>
+                    </select>
+                  </td>
+                  <td data-label="الكمية">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      formControlName="quantity"
+                    />
+                  </td>
+                  <td data-label="ملاحظة">
+                    <input type="text" formControlName="notes" />
+                  </td>
+                  <td data-label="" class="actions-cell">
+                    <button
+                      type="button"
+                      class="btn link danger"
+                      (click)="removeLine(i)"
+                    >
+                      ×
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row add-line-row">
+            <button type="button" class="btn" (click)="addLine()">
+              + إضافة صنف
+            </button>
+          </div>
+        </div>
+
+        <div class="footer">
+          <button type="button" class="btn" (click)="closeForm()">إلغاء</button>
+          <button type="submit" class="btn primary">حفظ الطلبية</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

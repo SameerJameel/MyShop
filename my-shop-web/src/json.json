@@ -1,0 +1,412 @@
+[
+    {
+      "id": 10,
+      "vendorId": 1,
+      "vendor": {
+        "id": 1,
+        "name": "يحيى الرحال",
+        "phone": "07999999999999",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-12-01T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": [
+        {
+          "id": 16,
+          "itemId": 6,
+          "item": {
+            "id": 6,
+            "name": "برغر توب ميل لحمة او دجاج",
+            "unit": "kg",
+            "categoryId": 2,
+            "defaultPurchasePrice": 0,
+            "defaultSalePrice": 1,
+            "reorderLevel": 0,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 10,
+          "quantity": 2,
+          "notes": ""
+        },
+        {
+          "id": 17,
+          "itemId": 8,
+          "item": {
+            "id": 8,
+            "name": "برغر لذيذة لحمة (30 قطعة)",
+            "unit": "kg",
+            "categoryId": 2,
+            "defaultPurchasePrice": 0,
+            "defaultSalePrice": 2.5,
+            "reorderLevel": 0,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 10,
+          "quantity": 1,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "vendorId": 2,
+      "vendor": {
+        "id": 2,
+        "name": "علي الاندماج",
+        "phone": "0799999999999",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-11-30T00:00:00",
+      "status": 2,
+      "notes": "",
+      "lines": [
+        {
+          "id": 15,
+          "itemId": 2,
+          "item": {
+            "id": 2,
+            "name": "جناح دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 0,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 9,
+          "quantity": 1,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "vendorId": 6,
+      "vendor": {
+        "id": 6,
+        "name": "سمير ابو ناصر",
+        "phone": "+962790481580",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-11-27T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": [
+        {
+          "id": 9,
+          "itemId": 1,
+          "item": {
+            "id": 1,
+            "name": "فخذ دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 50,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 7,
+          "quantity": 100,
+          "notes": ""
+        },
+        {
+          "id": 10,
+          "itemId": 2,
+          "item": {
+            "id": 2,
+            "name": "جناح دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 0,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 7,
+          "quantity": 10,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "vendorId": 6,
+      "vendor": {
+        "id": 6,
+        "name": "سمير ابو ناصر",
+        "phone": "+962790481580",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-11-27T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": [
+        {
+          "id": 11,
+          "itemId": 1,
+          "item": {
+            "id": 1,
+            "name": "فخذ دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 50,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 8,
+          "quantity": 1,
+          "notes": ""
+        },
+        {
+          "id": 12,
+          "itemId": 3,
+          "item": {
+            "id": 3,
+            "name": "زيتون جرجير اسود",
+            "unit": "kg",
+            "categoryId": 5,
+            "defaultPurchasePrice": 2.7,
+            "defaultSalePrice": 3,
+            "reorderLevel": 5,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 8,
+          "quantity": 1,
+          "notes": ""
+        },
+        {
+          "id": 13,
+          "itemId": 4,
+          "item": {
+            "id": 4,
+            "name": "زيتون اخضر نبالي",
+            "unit": "kg",
+            "categoryId": 5,
+            "defaultPurchasePrice": 2.7,
+            "defaultSalePrice": 3,
+            "reorderLevel": 5,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 8,
+          "quantity": 1,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "vendorId": null,
+      "vendor": null,
+      "orderDate": "2025-11-23T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": [
+        {
+          "id": 1,
+          "itemId": 4,
+          "item": {
+            "id": 4,
+            "name": "زيتون اخضر نبالي",
+            "unit": "kg",
+            "categoryId": 5,
+            "defaultPurchasePrice": 2.7,
+            "defaultSalePrice": 3,
+            "reorderLevel": 5,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 3,
+          "quantity": 5,
+          "notes": ""
+        },
+        {
+          "id": 2,
+          "itemId": 5,
+          "item": {
+            "id": 5,
+            "name": "سمك مقطوع راسه",
+            "unit": "kg",
+            "categoryId": 4,
+            "defaultPurchasePrice": 2,
+            "defaultSalePrice": 2.5,
+            "reorderLevel": 10,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 3,
+          "quantity": 10,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "vendorId": null,
+      "vendor": null,
+      "orderDate": "2025-11-23T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": []
+    },
+    {
+      "id": 5,
+      "vendorId": 5,
+      "vendor": {
+        "id": 5,
+        "name": "شهم العطاونة (عبدو)",
+        "phone": "079999999999",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-11-23T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": [
+        {
+          "id": 3,
+          "itemId": 1,
+          "item": {
+            "id": 1,
+            "name": "فخذ دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 50,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 5,
+          "quantity": 100,
+          "notes": ""
+        },
+        {
+          "id": 4,
+          "itemId": 2,
+          "item": {
+            "id": 2,
+            "name": "جناح دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 0,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 5,
+          "quantity": 200,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "vendorId": 5,
+      "vendor": {
+        "id": 5,
+        "name": "شهم العطاونة (عبدو)",
+        "phone": "079999999999",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-11-23T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": [
+        {
+          "id": 5,
+          "itemId": 1,
+          "item": {
+            "id": 1,
+            "name": "فخذ دجاج حلل",
+            "unit": "kg",
+            "categoryId": 7,
+            "defaultPurchasePrice": 0.6,
+            "defaultSalePrice": 0.8,
+            "reorderLevel": 50,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 6,
+          "quantity": 50,
+          "notes": ""
+        },
+        {
+          "id": 6,
+          "itemId": 5,
+          "item": {
+            "id": 5,
+            "name": "سمك مقطوع راسه",
+            "unit": "kg",
+            "categoryId": 4,
+            "defaultPurchasePrice": 2,
+            "defaultSalePrice": 2.5,
+            "reorderLevel": 10,
+            "isService": false,
+            "isProduced": false,
+            "itemVendors": []
+          },
+          "purchaseOrderId": 6,
+          "quantity": 100,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "vendorId": 3,
+      "vendor": {
+        "id": 3,
+        "name": "يوسف الرفاعي",
+        "phone": "0799999999999",
+        "whatsApp": null,
+        "terms": null,
+        "notes": null,
+        "itemVendors": []
+      },
+      "orderDate": "2025-11-21T00:00:00",
+      "status": 0,
+      "notes": "",
+      "lines": []
+    }
+  ]

@@ -1,0 +1,158 @@
+<div class="employees-page" dir="rtl">
+    <div class="page-header">
+      <div class="page-header__text">
+        <h1>الموظفون</h1>
+        <p class="page-subtitle">
+          إدارة الموظفين وحساب الرواتب والسحوبات والساعات الإضافية للشهر الحالي.
+        </p>
+      </div>
+  
+      <button class="btn primary" (click)="openAddEmployee()">
+        + إضافة موظف جديد
+      </button>
+    </div>
+  
+    <div class="page-messages">
+      <div *ngIf="loading" class="info-box">جاري التحميل...</div>
+    </div>
+  
+    <!-- جدول تلخيص الشهر الحالي -->
+    <div class="card table-card" *ngIf="employees.length">
+      <div class="month-filter">
+        <label>شهر:</label>
+        <input type="month" [(ngModel)]="selectedMonth" (change)="reloadSummary()" />
+      </div>
+  
+      <div class="table-wrapper">
+        <table class="employees-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الاسم</th>
+              <th>الراتب الأساسي</th>
+              <th>الساعات الإضافية (ساعة)</th>
+              <th>قيمة الإضافي</th>
+              <th>المسحوبات</th>
+              <th>الصافي المستحق</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let e of employees">
+              <td>{{ e.id }}</td>
+              <td class="col-name">
+                {{ e.name }}
+              </td>
+              <td>{{ e.baseSalary | number: '1.2-2' }}</td>
+              <td>{{ e.summary?.overtimeHours || 0 }}</td>
+              <td>{{ e.summary?.overtimeAmount | number: '1.2-2' }}</td>
+              <td>{{ e.summary?.withdrawals | number: '1.2-2' }}</td>
+              <td class="net">
+                {{ e.summary?.netToPay | number: '1.2-2' }}
+              </td>
+              <td class="actions">
+                <button class="btn link" (click)="openEditEmployee(e)">تعديل</button>
+                <button class="btn link" (click)="openAddTransaction(e)">حركة</button>
+                <button class="btn link danger" (click)="deleteEmployee(e)">حذف</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  
+    <div class="empty-state" *ngIf="!employees.length && !loading">
+      <div class="card empty-card">
+        <p>لا يوجد موظفين بعد.</p>
+        <button class="btn secondary" (click)="openAddEmployee()">
+          + أضف أول موظف الآن
+        </button>
+      </div>
+    </div>
+  
+    <!-- مودال الموظف -->
+    <div class="modal-backdrop" *ngIf="isEmployeeFormOpen">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>{{ isEditEmployee ? 'تعديل موظف' : 'إضافة موظف' }}</h2>
+          <button class="close-btn" type="button" (click)="closeEmployeeForm()">×</button>
+        </div>
+  
+        <form [formGroup]="employeeForm" (ngSubmit)="saveEmployee()" class="modal-body">
+          <div class="form-row">
+            <label>اسم الموظف</label>
+            <input type="text" formControlName="name" />
+          </div>
+  
+          <div class="form-row two-cols">
+            <div>
+              <label>الراتب الأساسي (شهري)</label>
+              <input type="number" step="0.01" formControlName="baseSalary" />
+            </div>
+            <div>
+              <label>أجرة الساعة الإضافية</label>
+              <input type="number" step="0.01" formControlName="overtimeHourlyRate" />
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label>ملاحظات</label>
+            <textarea formControlName="notes" rows="2"></textarea>
+          </div>
+  
+          <div class="modal-footer">
+            <button type="button" class="btn" (click)="closeEmployeeForm()">إلغاء</button>
+            <button type="submit" class="btn primary">حفظ</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  
+    <!-- مودال حركة راتب / سلفة / إضافي -->
+    <div class="modal-backdrop" *ngIf="isTransactionFormOpen">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>إضافة حركة راتب للموظف: {{ selectedEmployee?.name }}</h2>
+          <button class="close-btn" type="button" (click)="closeTransactionForm()">×</button>
+        </div>
+  
+        <form [formGroup]="transactionForm" (ngSubmit)="saveTransaction()" class="modal-body">
+          <div class="form-row">
+            <label>التاريخ</label>
+            <input type="date" formControlName="date" />
+          </div>
+  
+          <div class="form-row">
+            <label>النوع</label>
+            <select formControlName="type">
+              <option [value]="0">صرف راتب</option>
+              <option [value]="1">مسحوبات / سلفة</option>
+              <option [value]="2">ساعات إضافية</option>
+            </select>
+          </div>
+  
+          <div class="form-row two-cols">
+            <div>
+              <label>المبلغ</label>
+              <input type="number" step="0.01" formControlName="amount" />
+            </div>
+            <div>
+              <label>الساعات (للإضافي)</label>
+              <input type="number" step="0.01" formControlName="hours" />
+            </div>
+          </div>
+  
+          <div class="form-row">
+            <label>ملاحظات</label>
+            <textarea formControlName="notes" rows="2"></textarea>
+          </div>
+  
+          <div class="modal-footer">
+            <button type="button" class="btn" (click)="closeTransactionForm()">إلغاء</button>
+            <button type="submit" class="btn primary">حفظ الحركة</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  

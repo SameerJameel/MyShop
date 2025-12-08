@@ -1,0 +1,178 @@
+<div class="items-page" dir="rtl">
+  <!-- عنوان الصفحة -->
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1>الأصناف</h1>
+      <p class="page-subtitle">
+        إدارة الأصناف، أسعار الشراء والبيع، وحد إعادة الطلب.
+      </p>
+    </div>
+
+    <button class="btn primary" (click)="openAddForm()">
+      + إضافة صنف جديد
+    </button>
+  </div>
+
+  <!-- رسائل حالة الصفحة -->
+  <div class="page-messages">
+    <div *ngIf="loading" class="info-box">
+      جاري التحميل...
+    </div>
+
+    <div *ngIf="error" class="info-box info-box--error">
+      {{ error }}
+    </div>
+  </div>
+  <div class="filters-row" *ngIf="!loading && categories.length">
+    <label>المجموعة الرئيسية:</label>
+    <select [(ngModel)]="selectedCategoryId">
+      <option [ngValue]="0">كل المجموعات</option>
+      <option *ngFor="let c of categories" [ngValue]="c.id">
+        {{ c.name }}
+      </option>
+    </select>
+  </div>
+
+  <!-- جدول الأصناف -->
+  <div class="card table-card" *ngIf="!loading && filteredItems.length">
+    <div class="table-wrapper">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الاسم</th>
+            <th>الوحدة</th>
+            <th>المجموعة (ID)</th>
+            <th>سعر الشراء</th>
+            <th>سعر البيع</th>
+            <th>حد إعادة الطلب</th>
+            <th>خدمة؟</th>
+            <th>منتج جاهز؟</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of filteredItems">
+            <td>{{ item.id }}</td>
+            <td class="col-name">
+              <span class="item-name">{{ item.name }}</span>
+            </td>
+            <td>{{ item.unit }}</td>
+            <td>{{ item.categoryId }}</td>
+            <td>{{ item.defaultPurchasePrice | number: '1.2-2' }}</td>
+            <td>{{ item.defaultSalePrice | number: '1.2-2' }}</td>
+            <td>{{ item.reorderLevel }}</td>
+            <td>
+              <span [class.badge]="true"
+                    [class.badge--yes]="item.isService"
+                    [class.badge--no]="!item.isService">
+                {{ item.isService ? 'نعم' : 'لا' }}
+              </span>
+            </td>
+            <td>
+              <span [class.badge]="true"
+                    [class.badge--yes]="item.isProduced"
+                    [class.badge--no]="!item.isProduced">
+                {{ item.isProduced ? 'نعم' : 'لا' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn link" (click)="openEditForm(item)">تعديل</button>
+              <button class="btn link danger" (click)="deleteItem(item)">حذف</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- حالة لا يوجد بيانات -->
+  <div class="empty-state" *ngIf="!loading && !items.length && !filteredItems.length">
+    <div class="card empty-card">
+      <p>لا يوجد أصناف بعد.</p>
+      <button class="btn secondary" (click)="openAddForm()">
+        + أضف أول صنف الآن
+      </button>
+    </div>
+  </div>
+
+  <!-- Popup form -->
+  <div class="modal-backdrop" *ngIf="isFormOpen">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'تعديل صنف' : 'إضافة صنف جديد' }}</h2>
+        <button class="close-btn" type="button" (click)="closeForm()">×</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submitForm()" class="modal-body">
+        <div class="form-row">
+          <label>اسم الصنف</label>
+          <input type="text" formControlName="name" />
+          <div class="error" *ngIf="f['name'].touched && f['name'].invalid">
+            الاسم مطلوب
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>الوحدة</label>
+          <select formControlName="unit">
+            <option value="kg">كيلو</option>
+            <option value="piece">حبة</option>
+            <option value="carton">كرتونة</option>
+            <option value="pack">عبوة</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>المجموعة</label>
+          <select formControlName="categoryId">
+            <option value="0">اختر مجموعة</option>
+            <option *ngFor="let c of categories" [value]="c.id">
+              {{ c.name }}
+            </option>
+          </select>
+          <div class="error" *ngIf="f['categoryId'].touched && f['categoryId'].invalid">
+            يرجى اختيار مجموعة
+          </div>
+        </div>
+
+        <div class="form-row two-cols">
+          <div>
+            <label>سعر الشراء</label>
+            <input type="number" step="0.01" formControlName="defaultPurchasePrice" />
+          </div>
+          <div>
+            <label>سعر البيع</label>
+            <input type="number" step="0.01" formControlName="defaultSalePrice" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>حد إعادة الطلب</label>
+          <input type="number" formControlName="reorderLevel" />
+        </div>
+
+        <div class="form-row inline">
+          <label>
+            <input type="checkbox" formControlName="isService" />
+            خدمة (مثلاً فرم لحمة)
+          </label>
+        </div>
+
+        <div class="form-row inline">
+          <label>
+            <input type="checkbox" formControlName="isProduced" />
+            منتج جاهز (كفتة/مفروم)
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" (click)="closeForm()">إلغاء</button>
+          <button type="submit" class="btn primary">
+            {{ isEditMode ? 'حفظ التعديلات' : 'حفظ الصنف' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

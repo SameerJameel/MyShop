@@ -1,0 +1,257 @@
+.expenses-page,
+.debts-page {
+  direction: rtl;
+  padding: 20px;
+  font-family: "Tajawal", sans-serif;
+  background: #f5f6fa;
+  min-height: 100vh;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+
+      input[type="date"] {
+        padding: 8px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 14px;
+      }
+
+      .btn.primary {
+        background: #3498db;
+        color: white;
+        padding: 8px 14px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 14px;
+
+        &:hover {
+          background: #2980b9;
+        }
+      }
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .amount {
+        font-weight: 700;
+        font-size: 16px;
+        color: #16a085;
+      }
+    }
+
+    .meta {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .notes {
+      background: #f1f2f6;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #444;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      .btn.link {
+        background: transparent;
+        border: none;
+        color: #3498db;
+        cursor: pointer;
+        padding: 2px 6px;
+        font-size: 14px;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      .danger {
+        color: #e74c3c;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .empty {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 16px;
+    color: #7f8c8d;
+  }
+
+  .info {
+    text-align: center;
+    font-size: 16px;
+    color: #2c3e50;
+  }
+
+  /* Modal --------------------------- */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fade 0.2s ease-in-out;
+
+    .modal {
+      width: 420px;
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+      animation: pop 0.25s ease;
+
+      .modal-header {
+        padding: 15px;
+        background: #3498db;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        h3 {
+          margin: 0;
+        }
+
+        .close {
+          background: transparent;
+          border: none;
+          font-size: 22px;
+          color: white;
+          cursor: pointer;
+        }
+      }
+
+      .modal-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        label {
+          font-size: 14px;
+          color: #2c3e50;
+          font-weight: 600;
+        }
+
+        input,
+        textarea,
+        select {
+          padding: 8px 10px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-size: 14px;
+          background: #fff;
+
+          &:focus {
+            outline: none;
+            border-color: #3498db;
+          }
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 70px;
+        }
+
+        .two {
+          display: flex;
+          gap: 10px;
+
+          > div {
+            flex: 1;
+          }
+        }
+      }
+
+      .modal-footer {
+        padding: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+
+        .btn {
+          padding: 8px 14px;
+          border-radius: 6px;
+          font-size: 14px;
+          cursor: pointer;
+          border: none;
+          background: #ecf0f1;
+
+          &.primary {
+            background: #3498db;
+            color: white;
+
+            &:hover {
+              background: #2980b9;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes pop {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}

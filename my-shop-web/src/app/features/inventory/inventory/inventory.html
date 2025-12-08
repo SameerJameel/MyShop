@@ -1,0 +1,121 @@
+<div class="inventory-page" dir="rtl">
+  <div class="top-row">
+    <h2>جرد الأصناف</h2>
+
+    <div class="controls">
+      <input
+        type="text"
+        placeholder="بحث باسم الصنف أو الوحدة..."
+        [(ngModel)]="search"
+        (input)="applyFilter()" />
+
+      <select [(ngModel)]="selectedCategoryId" (change)="applyFilter()">
+        <option [ngValue]="0">كل المجموعات</option>
+        <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
+      </select>
+
+      <button class="btn" (click)="exportExcel()">تصدير Excel</button>
+
+      <label class="import-btn">
+        استيراد Excel
+        <input type="file" accept=".xlsx,.xls" (change)="onFileChange($event)" />
+      </label>
+
+      <button class="btn primary" (click)="saveAllVisible()">حفظ التعديلات</button>
+      <button class="btn" (click)="openSnapshotModal()">حفظ كعملية جرد</button>
+      <button class="btn" (click)="loadItems()">تحديث</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    إجمالي قيمة المخزون: <strong>{{ totalPrice | number:'1.2-2' }}</strong>
+  </div>
+
+  <div *ngIf="loading" class="loading">جارِ التحميل...</div>
+
+  <div *ngIf="!loading && !filteredItems.length" class="empty">
+    لا توجد أصناف.
+  </div>
+
+  <div class="table-wrapper" *ngIf="!loading && filteredItems.length">
+    <table class="inventory-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الصنف</th>
+          <th>الوحدة</th>
+          <th>المجموعة</th>
+          <th>الكمية</th>
+          <th>سعر البيع</th>
+          <th>المجموع</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let it of filteredItems; index as i">
+          <td>{{ i + 1 }}</td>
+          <td>{{ it.name }}</td>
+          <td>{{ it.unit || '-' }}</td>
+          <td>{{ it.categoryName || it.categoryId || '-' }}</td>
+
+          <td>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              [ngModel]="editMap.get(it.id ?? it.name)?.quantity"
+              (ngModelChange)="onQuantityChange(it, $event)" />
+          </td>
+
+          <td>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              [ngModel]="editMap.get(it.id ?? it.name)?.salePrice"
+              (ngModelChange)="onSalePriceChange(it, $event)" />
+          </td>
+
+          <td>{{ rowTotal(it) | number:'1.2-2' }}</td>
+
+          <td class="actions-col">
+            <button class="btn link" (click)="saveItem(it)">حفظ</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="import-errors" *ngIf="importErrors.length">
+    <h4>أخطاء في الاستيراد:</h4>
+    <ul>
+      <li *ngFor="let e of importErrors">{{ e }}</li>
+    </ul>
+  </div>
+
+  <!-- مودال حفظ عملية الجرد -->
+  <div class="modal-backdrop" *ngIf="isSnapshotOpen">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>حفظ عملية الجرد الحالية</h3>
+        <button class="close" (click)="isSnapshotOpen = false">×</button>
+      </div>
+
+      <form [formGroup]="snapshotForm" (ngSubmit)="saveSnapshot()" class="modal-body">
+        <label>تاريخ الجرد</label>
+        <input type="date" formControlName="date" />
+
+        <label>اسم الجرد</label>
+        <input type="text" formControlName="name" />
+
+        <label>ملاحظات</label>
+        <textarea formControlName="notes"></textarea>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" (click)="isSnapshotOpen = false">إلغاء</button>
+          <button type="submit" class="btn primary">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

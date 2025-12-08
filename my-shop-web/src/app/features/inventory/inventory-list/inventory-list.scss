@@ -1,0 +1,48 @@
+.inventory-sessions-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    font-family: "Tajawal", sans-serif;
+  
+    .header {
+      display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;
+      h2 { margin:0; }
+      .btn { padding:8px 12px; border-radius:8px; border:none; background:#e5e7eb; cursor:pointer; }
+    }
+  
+    .table-wrapper {
+      background:#fff; border-radius:10px; box-shadow:0 6px 18px rgba(15,23,42,0.05); overflow:auto;
+      table { width:100%; border-collapse:collapse; }
+      th, td { padding:8px 10px; border-bottom:1px solid #f1f5f9; text-align:left; }
+      thead { background:#f9fafb; }
+      .btn.link { background:transparent; border:none; color:#2563eb; cursor:pointer; }
+    }
+  
+    .loading, .empty { text-align:center; padding:40px 0; color:#6b7280; }
+  
+    .details-panel {
+      margin-top:1rem;
+      background:#fff;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(15,23,42,0.05);
+      padding:1rem;
+  
+      .details-header {
+        display:flex; justify-content:space-between; align-items:center; margin-bottom:.5rem;
+        .close-btn { background:transparent; border:none; font-size:20px; cursor:pointer; }
+      }
+  
+      .details-meta { display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:.5rem; color:#4b5563; }
+  
+      .details-table-wrapper { overflow:auto; max-height:400px; }
+      table { width:100%; border-collapse:collapse; }
+      th, td { padding:6px 8px; border-bottom:1px solid #f3f4f6; text-align:left; }
+      thead { background:#f9fafb; }
+    }
+  
+    @media (max-width: 900px) {
+      .header { flex-direction:column; align-items:flex-start; gap:8px; }
+      .details-meta { flex-direction:column; }
+    }
+  }
+  

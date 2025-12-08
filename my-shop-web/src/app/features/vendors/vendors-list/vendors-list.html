@@ -1,0 +1,110 @@
+<div class="vendors-page" dir="rtl">
+
+  <!-- الهيدر -->
+  <div class="page-header">
+    <div class="page-header__text">
+      <h1>الموردين</h1>
+      <p class="page-subtitle">
+        إدارة بيانات الموردين ومعلومات التواصل والملاحظات.
+      </p>
+    </div>
+
+    <button class="btn primary" (click)="openAdd()">
+      + إضافة مورد جديد
+    </button>
+  </div>
+
+  <!-- رسائل حالة الصفحة -->
+  <div class="page-messages">
+    <div *ngIf="loading" class="info-box">
+      جاري التحميل...
+    </div>
+  </div>
+
+  <!-- جدول الموردين -->
+  <div class="card table-card" *ngIf="vendors.length">
+    <div class="table-wrapper">
+      <table class="vendors-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>الاسم</th>
+            <th>الهاتف</th>
+            <th>العنوان</th>
+            <th>ملاحظات</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of vendors">
+            <td>{{ v.id }}</td>
+            <td class="col-name">
+              <span class="vendor-name">{{ v.name }}</span>
+            </td>
+            <td>{{ v.phone || '-' }}</td>
+            <td>{{ v.address || '-' }}</td>
+            <td class="notes-cell">
+              <span class="notes-text">{{ v.notes || '-' }}</span>
+            </td>
+            <td class="actions">
+              <button class="btn link" (click)="openEdit(v)">تعديل</button>
+              <button class="btn link danger" (click)="delete(v)">حذف</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- حالة لا يوجد بيانات -->
+  <div class="empty-state" *ngIf="!vendors.length && !loading">
+    <div class="card empty-card">
+      <p>لا يوجد موردين بعد.</p>
+      <button class="btn secondary" (click)="openAdd()">
+        + أضف أول مورد الآن
+      </button>
+    </div>
+  </div>
+
+  <!-- Popup form -->
+  <div class="modal-backdrop" *ngIf="isFormOpen">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>{{ isEditMode ? 'تعديل مورد' : 'إضافة مورد' }}</h2>
+        <button class="close-btn" type="button" (click)="close()">×</button>
+      </div>
+
+      <form (ngSubmit)="save()" [formGroup]="form" class="modal-body">
+
+        <div class="form-row">
+          <label>اسم المورد</label>
+          <input type="text" formControlName="name" />
+          <div class="error" *ngIf="f['name'].touched && f['name'].invalid">
+            الاسم مطلوب
+          </div>
+        </div>
+
+        <div class="form-row two-cols">
+          <div>
+            <label>رقم الهاتف</label>
+            <input type="text" formControlName="phone" />
+          </div>
+          <div>
+            <label>العنوان</label>
+            <input type="text" formControlName="address" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>ملاحظات</label>
+          <textarea formControlName="notes" rows="3"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" (click)="close()">إلغاء</button>
+          <button type="submit" class="btn primary">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

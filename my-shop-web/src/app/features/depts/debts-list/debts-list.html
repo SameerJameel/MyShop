@@ -1,0 +1,88 @@
+<div class="debts-page" dir="rtl">
+    <div class="page-header">
+      <h2>الديون</h2>
+      <div class="controls">
+        <button class="btn primary" (click)="openAdd()">+ سجل دين</button>
+      </div>
+    </div>
+  
+    <div *ngIf="loading" class="info">جارِ التحميل...</div>
+  
+    <div class="grid" *ngIf="!loading && debts.length">
+      <div class="card" *ngFor="let d of debts">
+        <div class="head">
+          <div class="name">{{ d.personName }}</div>
+          <div class="amount">{{ d.amount | currency:'JOD' }}</div>
+        </div>
+        <div class="meta">
+          <div>التاريخ: {{ d.date | date:'yyyy-MM-dd' }}</div>
+          <div>النوع: {{ d.isVendor ? 'تاجر' : 'زبون' }}</div>
+          <div>الاتجاه: {{ d.direction == 2 ? 'لنا عليه (OwedToUs)' : 'علينا له (WeOwe)' }}</div>
+        </div>
+  
+        <div class="notes" *ngIf="d.notes">{{ d.notes }}</div>
+  
+        <div class="actions">
+          <button class="btn link" (click)="openEdit(d)">تعديل</button>
+          <button class="btn link danger" (click)="remove(d)">حذف</button>
+        </div>
+      </div>
+    </div>
+  
+    <div *ngIf="!loading && !debts.length" class="empty">لا توجد سجلات ديون.</div>
+  
+    <!-- modal (كما في الكود السابق) -->
+    <div class="modal-backdrop" *ngIf="isFormOpen">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>{{ isEdit ? 'تعديل دين' : 'إضافة دين' }}</h3>
+          <button class="close" (click)="isFormOpen=false">×</button>
+        </div>
+  
+        <form [formGroup]="form" (ngSubmit)="save()" class="modal-body">
+          <label>التاريخ</label>
+          <input type="date" formControlName="date" />
+  
+          <label>الاسم</label>
+          <input type="text" formControlName="personName" />
+  
+          <div class="two">
+            <div>
+                <label>نعم تاجر؟</label>
+                <select formControlName="isVendor">
+                  <option [ngValue]="true">نعم - تاجر</option>
+                  <option [ngValue]="false">لا - زبون</option>
+                </select>
+            </div>
+            <div>
+              <label>الهاتف</label>
+              <input type="text" formControlName="phone" />
+            </div>
+          </div>
+  
+          <div class="two">
+            <div>
+                <label>المبلغ</label>
+                <input type="number" step="0.01" formControlName="amount" />
+            </div>
+            <div>
+                <label>الاتجاه</label>
+                <select formControlName="direction">
+                  <option [ngValue]="1">علينا (نحن نَدين)</option>       <!-- WeOwe = 1 -->
+                  <option [ngValue]="2">له (هو مدين لنا)</option>        <!-- OwedToUs = 2 -->
+                </select>
+            </div>
+          </div>
+  
+          <label>ملاحظات</label>
+          <textarea formControlName="notes"></textarea>
+  
+          <div class="modal-footer">
+            <button type="button" class="btn" (click)="isFormOpen=false">إلغاء</button>
+            <button type="submit" class="btn primary">{{ isEdit ? 'حفظ' : 'إضافة' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  

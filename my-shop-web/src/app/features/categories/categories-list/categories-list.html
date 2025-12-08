@@ -1,0 +1,62 @@
+<div class="cats-page" dir="rtl">
+  <div class="page-header">
+    <h1>المجموعات</h1>
+    <p class="subtitle">إدارة مجموعات الأصناف في المحل.</p>
+  </div>
+
+  <!-- شريط إضافة مجموعة جديدة -->
+  <div class="add-row">
+    <input
+      type="text"
+      [(ngModel)]="newName"
+      placeholder="اسم مجموعة جديدة (مثال: أسماك، ألبان وأجبان)"
+      (keyup.enter)="add()"
+    />
+    <button
+      class="btn primary"
+      (click)="add()"
+      [disabled]="!newName.trim() || saving"
+    >
+      {{ saving ? 'جاري الإضافة...' : 'إضافة' }}
+    </button>
+  </div>
+
+  <!-- رسائل حالة -->
+  <div *ngIf="loading" class="info-row">جارِ تحميل المجموعات...</div>
+  <div *ngIf="error" class="error-row">{{ error }}</div>
+
+  <!-- الجدول -->
+  <div class="table-wrapper" *ngIf="!loading && categories.length">
+    <table class="cats-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>اسم المجموعة</th>
+          <th class="actions-header">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of categories; let i = index">
+          <td data-label="#"> {{ i + 1 }} </td>
+          <td data-label="اسم المجموعة">
+            {{ c.name }}
+          </td>
+          <td data-label="إجراءات" class="actions-cell">
+            <button
+              type="button"
+              class="btn link danger"
+              (click)="delete(c)"
+            >
+              حذف
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- لا توجد بيانات -->
+  <div *ngIf="!loading && !categories.length" class="empty-row">
+    لا توجد مجموعات بعد. أضف أول مجموعة من الأعلى.
+  </div>
+</div>

@@ -1,0 +1,96 @@
+###########################################
+# 🔥 Project-wide ignores
+###########################################
+
+# Ignore documents folder (as requested)
+documents/
+
+###########################################
+# 🟦 Angular (my-shop-web)
+###########################################
+
+# Angular build output
+my-shop-web/dist/
+my-shop-web/tmp/
+my-shop-web/temp/
+my-shop-web/.angular/
+my-shop-web/.angular/cache/
+my-shop-web/out-tsc/
+
+# Node modules
+my-shop-web/node_modules/
+
+# Environment files
+my-shop-web/src/environments/environment*.ts
+
+# Editor settings
+my-shop-web/.vscode/
+my-shop-web/.idea/
+
+# Logs
+my-shop-web/*.log
+my-shop-web/npm-debug.log*
+my-shop-web/yarn-error.log*
+my-shop-web/pnpm-debug.log*
+
+###########################################
+# 🟩 .NET API (MyShop.Api)
+###########################################
+
+# Build directories
+MyShop.Api/bin/
+MyShop.Api/obj/
+MyShop.Api/Debug/
+MyShop.Api/Release/
+MyShop.Api/x64/
+MyShop.Api/x86/
+
+# VS folders
+MyShop.Api/.vs/
+.vs/
+
+# Database files
+MyShop.Api/*.db
+MyShop.Api/*.mdf
+MyShop.Api/*.ldf
+
+# User-specific files
+MyShop.Api/*.user
+MyShop.Api/*.suo
+
+# Logs
+MyShop.Api/*.log
+MyShop.Api/logs/
+
+###########################################
+# 🟫 System / OS Files
+###########################################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+###########################################
+# 🟧 Other common ignores
+###########################################
+
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Local configs
+*.env
+*.local
+.env.*
+*.config.local.json
+
+# Coverage
+coverage/

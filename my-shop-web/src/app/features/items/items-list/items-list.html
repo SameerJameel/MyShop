@@ -6,7 +6,7 @@
       <p class="page-subtitle">
         إدارة الأصناف، أسعار الشراء والبيع، وحد إعادة الطلب.
       </p>
-    </div>
+     
 
     <button class="btn primary" (click)="openAddForm()">
       + إضافة صنف جديد
@@ -24,13 +24,21 @@
     </div>
   </div>
   <div class="filters-row" *ngIf="!loading && categories.length">
-    <label>المجموعة الرئيسية:</label>
-    <select [(ngModel)]="selectedCategoryId">
+    <input
+    type="text"
+    placeholder="بحث باسم الصنف أو الوحدة..."
+    [(ngModel)]="search"
+    (input)="applyFilter()" />
+  </div>
+   
+    <!-- <label>المجموعة الرئيسية:</label> -->
+    <select class="select-items" [(ngModel)]="selectedCategoryId" (change)="applyFilter()">
       <option [ngValue]="0">كل المجموعات</option>
       <option *ngFor="let c of categories" [ngValue]="c.id">
         {{ c.name }}
       </option>
     </select>
+  
   </div>
 
   <!-- جدول الأصناف -->
@@ -42,12 +50,12 @@
             <th>#</th>
             <th>الاسم</th>
             <th>الوحدة</th>
-            <th>المجموعة (ID)</th>
             <th>سعر الشراء</th>
             <th>سعر البيع</th>
+            <th>المجموعة (ID)</th>
             <th>حد إعادة الطلب</th>
-            <th>خدمة؟</th>
-            <th>منتج جاهز؟</th>
+            <!-- <th>خدمة؟</th>
+            <th>منتج جاهز؟</th> -->
             <th>إجراءات</th>
           </tr>
         </thead>
@@ -58,11 +66,11 @@
               <span class="item-name">{{ item.name }}</span>
             </td>
             <td>{{ item.unit }}</td>
-            <td>{{ item.categoryId }}</td>
             <td>{{ item.defaultPurchasePrice | number: '1.2-2' }}</td>
             <td>{{ item.defaultSalePrice | number: '1.2-2' }}</td>
+            <td>{{ item.categoryId }}</td>
             <td>{{ item.reorderLevel }}</td>
-            <td>
+            <!-- <td>
               <span [class.badge]="true"
                     [class.badge--yes]="item.isService"
                     [class.badge--no]="!item.isService">
@@ -75,7 +83,7 @@
                     [class.badge--no]="!item.isProduced">
                 {{ item.isProduced ? 'نعم' : 'لا' }}
               </span>
-            </td>
+            </td> -->
             <td class="actions">
               <button class="btn link" (click)="openEditForm(item)">تعديل</button>
               <button class="btn link danger" (click)="deleteItem(item)">حذف</button>
@@ -152,7 +160,7 @@
           <input type="number" formControlName="reorderLevel" />
         </div>
 
-        <div class="form-row inline">
+        <!-- <div class="form-row inline">
           <label>
             <input type="checkbox" formControlName="isService" />
             خدمة (مثلاً فرم لحمة)
@@ -164,7 +172,7 @@
             <input type="checkbox" formControlName="isProduced" />
             منتج جاهز (كفتة/مفروم)
           </label>
-        </div>
+        </div> -->
 
         <div class="modal-footer">
           <button type="button" class="btn" (click)="closeForm()">إلغاء</button>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyShop.Api.Data;
+using MyShop.Api.DTOs;
 using MyShop.Api.Models;
 
 namespace MyShop.Api.Controllers;
@@ -123,5 +124,101 @@ public class PurchaseOrdersController : ControllerBase
 
         return NoContent();
     }
+    /// <summary>
+    /// جلب بيانات طلبية جاهزة لشاشة الاستلام
+    /// GET: api/purchaseorders/{id}/receive
+    /// </summary>
+    [HttpGet("{id}/receive")]
+    public async Task<ActionResult<PurchaseOrderReceiveVm>> GetForReceive(int id)
+    {
+        var po = await _db.PurchaseOrders
+            .Include(p => p.Vendor)
+            .Include(p => p.Lines)
+                .ThenInclude(l => l.Item)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
+        if (po == null)
+            return NotFound();
+
+        var vm = new PurchaseOrderReceiveVm
+        {
+            Id = po.Id,
+            OrderNumber = po.Id.ToString(), // عدّل لو عندك رقم طلبية حقيقي
+            OrderDate = po.OrderDate,
+            VendorName = po.Vendor?.Name ?? string.Empty,
+            Status = po.Status.ToString(),
+            DiscountAmount = po.DiscountAmount,
+            PaidAmount = po.PaidAmount,
+            Notes = po.Notes
+        };
+
+        foreach (var line in po.Lines)
+        {
+            vm.Lines.Add(new PurchaseOrderReceiveLineVm
+            {
+                LineId = line.Id,
+                ItemId = line.ItemId,
+                ItemName = line.Item.Name,
+                Unit = line.Item.Unit,
+                OrderedQuantity = line.OrderedQuantity,
+                // لو ما كان في ReceivedQuantity سابقًا عبيها بالـ Ordered
+                ReceivedQuantity = line.ReceivedQuantity > 0 ? line.ReceivedQuantity : line.OrderedQuantity,
+                PurchasePrice = line.PurchasePrice > 0 ? line.PurchasePrice : line.Item.DefaultPurchasePrice,
+                SalePrice = line.SalePrice > 0 ? line.SalePrice : line.Item.DefaultSalePrice
+            });
+        }
+
+        return Ok(vm);
+    }
+
+    /// <summary>
+    /// استلام الطلبية وتثبيت الكميات والأسعار وحالة الطلبية
+    /// POST: api/purchaseorders/{id}/receive
+    /// </summary>
+    [HttpPost("{id}/receive")]
+    public async Task<IActionResult> Receive(int id, [FromBody] PurchaseOrderReceiveRequest request)
+    {
+        var po = await _db.PurchaseOrders
+            .Include(p => p.Lines)
+                .ThenInclude(l => l.Item)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (po == null)
+            return NotFound();
+
+        // تحديث بيانات الرأس
+        po.ReceiveDate = request.ReceiveDate;
+        po.DiscountAmount = request.DiscountAmount;
+        po.PaidAmount = request.PaidAmount;
+        po.Notes = request.Notes;
+        po.Status = PurchaseOrderStatus.Received;
+
+        // تحديث الأسطر
+        foreach (var reqLine in request.Lines)
+        {
+            var line = po.Lines.FirstOrDefault(l => l.Id == reqLine.LineId);
+            if (line == null) continue;
+
+            line.ReceivedQuantity = reqLine.ReceivedQuantity;
+            line.PurchasePrice = reqLine.PurchasePrice;
+            line.SalePrice = reqLine.SalePrice;
+
+            // تحديث أسعار الصنف الافتراضية (اختياري)
+            line.Item.DefaultPurchasePrice = reqLine.PurchasePrice;
+            line.Item.DefaultSalePrice = reqLine.SalePrice;
+        }
+
+        // إعادة احتساب إجمالي الطلبية بعد الاستلام والخصم
+        po.TotalAmount = po.Lines.Sum(l => l.ReceivedQuantity * l.PurchasePrice) - po.DiscountAmount;
+
+        await _db.SaveChangesAsync();
+
+        // لو عندك جدول حركات مورد VendorTransactions
+        // تقدر تضيف سطر حركة هون (دين/دفعة) بناءً على PaidAmount و TotalAmount
+
+        return NoContent();
+    }
 }
+
+
+

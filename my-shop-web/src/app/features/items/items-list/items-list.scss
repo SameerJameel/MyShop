@@ -16,16 +16,21 @@
 .filters-row label {
   color: #374151;
 }
-
-.filters-row select {
-  min-width: 180px;
-  border-radius: 999px;
+.filters-row input[type="text"] {
+  padding: 8px 10px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
-  padding: 0.25rem 0.6rem;
+  width:calc(100% - 18px);
+}
+.select-items {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
   font-size: 0.85rem;
+  padding: 8px 10px;
 }
 
-.filters-row select:focus {
+.select-items:focus {
   outline: none;
   border-color: #16a34a;
   box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25);

@@ -23,9 +23,10 @@ export class ItemsList implements OnInit{
   private fb = inject(FormBuilder);
 
   items: Item[] = [];
+  filteredItems: Item[] = [];
   loading = false;
   error: string | null = null;
-
+  search = '';
   // popup form
   form!: FormGroup;
   isFormOpen = false;
@@ -70,6 +71,7 @@ export class ItemsList implements OnInit{
     this.itemsService.getAll().subscribe({
       next: res => {
         this.items = res;
+        this.applyFilter();
         this.loading = false;
       },
       error: err => {
@@ -174,16 +176,33 @@ export class ItemsList implements OnInit{
   selectedCategoryId: number = 0;
 
 // مصفوفة الأصناف بعد الفلترة
-get filteredItems() {
-  if (!this.items) {
-    return [];
+// get filteredItems() {
+//   if (!this.items) {
+//     return [];
+//   }
+
+//   if (!this.selectedCategoryId || this.selectedCategoryId === 0) {
+//     return this.items;
+//   }
+
+//   return this.items.filter(i => i.categoryId === this.selectedCategoryId);
+// }
+applyFilter(): void {
+  let arr = [...this.items];
+
+  if (this.selectedCategoryId && this.selectedCategoryId !== 0) {
+    arr = arr.filter(i => i.categoryId === this.selectedCategoryId);
   }
 
-  if (!this.selectedCategoryId || this.selectedCategoryId === 0) {
-    return this.items;
+  if (this.search && this.search.trim()) {
+    const q = this.search.trim().toLowerCase();
+    arr = arr.filter(i =>
+      (i.name || '').toLowerCase().includes(q) ||
+      (i.unit || '').toLowerCase().includes(q)
+    );
   }
 
-  return this.items.filter(i => i.categoryId === this.selectedCategoryId);
+  this.filteredItems = arr;
 }
 
 }

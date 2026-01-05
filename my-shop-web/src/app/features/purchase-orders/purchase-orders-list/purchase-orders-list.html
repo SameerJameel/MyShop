@@ -1,191 +1,147 @@
 <div class="po-page" dir="rtl">
+
+  <!-- الهيدر -->
   <div class="page-header">
-    <div>
+    <div class="titles">
       <h1>طلبات الشراء</h1>
-      <p class="subtitle">إدارة طلبات شراء البضاعة من الموردين.</p>
+      <p class="subtitle">
+        إدارة طلبات شراء البضاعة من الموردين.
+      </p>
     </div>
-    <button class="btn primary" (click)="openAdd()">طلبية جديدة</button>
+
+    <button class="btn primary" (click)="newOrder()">
+      طلبية جديدة
+    </button>
   </div>
 
-  <div *ngIf="loading" class="info-row">جارِ تحميل الطلبيات...</div>
-
-  <div *ngIf="!loading && !filteredOrders.length" class="empty-row">
-    لا توجد طلبات بعد. اضغط على <strong>طلبية جديدة</strong> لإضافة أول طلب.
+  <!-- حالة تحميل / خطأ -->
+  <div *ngIf="loading" class="state-msg">
+    جارِ تحميل طلبات الشراء...
+  </div>
+  <div *ngIf="error && !loading" class="state-msg error">
+    {{ error }}
   </div>
 
-  <div class="filters-row" *ngIf="!loading">
-    <div class="filter">
-      <label>الفترة:</label>
-      <select [(ngModel)]="filterPeriod">
-        <option value="all">الكل</option>
+  <!-- الفلاتر -->
+  <div class="filters" *ngIf="!loading">
+    <div class="filter-group">
+      <label>الفترة</label>
+      <select [(ngModel)]="filterPeriod" (ngModelChange)="onPeriodChange()">
         <option value="day">يومي</option>
         <option value="week">أسبوعي</option>
         <option value="month">شهري</option>
         <option value="year">سنوي</option>
+        <option value="all">الكل</option>
       </select>
     </div>
-  
-    <div class="filter">
-      <label>تاريخ الأساس:</label>
-      <input type="date" [(ngModel)]="filterDate" />
+
+    <div class="filter-group">
+      <label>تاريخ الأساس</label>
+      <input type="date"
+             [(ngModel)]="filterBaseDate"
+             (ngModelChange)="onBaseDateChange()">
     </div>
-  
-    <div class="filter">
-      <label>المورد:</label>
-      <input type="text" [(ngModel)]="filterVendor" placeholder="بحث باسم المورد" />
+
+    <div class="filter-group grow">
+      <label>المورد</label>
+      <input type="text"
+             placeholder="بحث باسم المورد"
+             [(ngModel)]="filterVendor"
+             (ngModelChange)="onVendorFilterChange()">
     </div>
   </div>
 
-  <!-- جدول الطلبات -->
-  <div class="table-wrapper" *ngIf="!loading && filteredOrders.length">
-    <table class="tbl po-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>التاريخ</th>
-          <th>المورد</th>
-          <th>عدد الأصناف</th>
-          <th>ملاحظات</th>
-          <th>الحالة</th>
-          <th>إجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let o of filteredOrders; let i = index">
-          <td data-label="#"> {{ o.id }} </td>
-          <td data-label="التاريخ">
-            {{ o.orderDate | date: 'yyyy-MM-dd' }}
-          </td>
-          <td data-label="المورد">
-            {{ o.vendor?.name || 'بدون مورد' }}
-          </td>
-          <td data-label="عدد الأصناف">
-            {{ o.lines?.length || 0 }}
-          </td>
-          <td data-label="ملاحظات">
-            {{ o.notes }}
-          </td>
-          <td data-label="الحالة">
-            {{ o.status }}
-          </td>
-          <td data-label="إجراءات" class="actions-cell">
-            <button class="btn link" (click)="openEdit(o)">تعديل</button>
-            <button class="btn link danger" (click)="delete(o)">حذف</button>
-            <button
-              class="btn link whatsapp"
-              (click)="sendWhatsApp(o)"
-              title="إرسال الطلبية عبر واتساب"
-            >
-              واتساب
-            </button>
-            <button class="btn link success"
-            *ngIf="o.status !== 'Received'"
-            (click)="markAsReceived(o)">
-      استلام
-    </button>
-  
-    <span class="badge badge--success" *ngIf="o.status === 'Received'">
-      مستلمة
-    </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- ملخص أعلى الصفحة -->
+  <div class="summary" *ngIf="!loading">
+    <div class="summary-card">
+      <span class="label">عدد الطلبيات</span>
+      <span class="value">{{ totalOrders }}</span>
+    </div>
+    <div class="summary-card">
+      <span class="label">عدد الأصناف الكلي</span>
+      <span class="value">{{ totalLines }}</span>
+    </div>
+    <div class="summary-card">
+      <span class="label">إجمالي المبالغ</span>
+      <span class="value">{{ totalAmount | currency:'JOD':'symbol':'1.2-2' }}</span>
+    </div>
   </div>
 
-  <!-- Popup form -->
-  <div class="popup-bg" *ngIf="isFormOpen">
-    <div class="popup">
-      <div class="popup-head">
-        <h2>{{ isEditMode ? 'تعديل طلبية' : 'طلبية جديدة' }}</h2>
-        <button type="button" class="close" (click)="closeForm()">×</button>
+  <!-- قائمة الطلبيات -->
+  <div *ngIf="!loading && !filteredOrders.length" class="state-msg">
+    لا توجد طلبات شراء ضمن الفلتر الحالي.
+  </div>
+
+  <div class="orders-list" *ngIf="!loading && filteredOrders.length">
+
+    <div class="order-card" *ngFor="let o of filteredOrders">
+      <div class="order-main">
+        <div class="order-header-row">
+          <div class="order-number">
+            <span class="hash">#</span>
+            <span>{{ o.id }}</span>
+          </div>
+
+          <span class="status"
+                [class.received]="isReceived(o)"
+                [class.draft]="!isReceived(o)">
+            {{ getStatusLabel(o) }}
+          </span>
+        </div>
+
+        <div class="order-info">
+          <div class="info-item">
+            <span class="label">التاريخ</span>
+            <span class="value">
+              {{ o.orderDate | date:'yyyy-MM-dd' }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">المورد</span>
+            <span class="value">{{ o.vendorName || '-' }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="label">عدد الأصناف</span>
+            <span class="value">{{ o.linesCount }}</span>
+          </div>
+
+          <div class="info-item" *ngIf="o.totalAmount != null">
+            <span class="label">الإجمالي</span>
+            <span class="value amount">
+              {{ o.totalAmount | currency:'JOD':'symbol':'1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="notes" *ngIf="o.notes">
+          <span class="label">ملاحظات:</span>
+          <span class="value">{{ o.notes }}</span>
+        </div>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="save()" class="form">
-        <div class="form-body">
-          <div class="row">
-            <label>المورد (اختياري)</label>
-            <select formControlName="vendorId">
-              <option [ngValue]="null">بدون مورد محدد</option>
-              <option *ngFor="let v of vendors" [ngValue]="v.id">
-                {{ v.name }}
-              </option>
-            </select>
-          </div>
+      <!-- الأكشنات -->
+      <div class="order-actions">
+        <button class="link-btn" (click)="editOrder(o)">
+          تعديل
+        </button>
 
-          <div class="row">
-            <div>
-              <label>تاريخ الطلبية</label>
-              <input type="date" formControlName="orderDate" />
-            </div>
-          </div>
+        <button class="link-btn danger" (click)="deleteOrder(o)">
+          حذف
+        </button>
 
-          <div class="row">
-            <label>ملاحظات عامة</label>
-            <textarea rows="2" formControlName="notes"></textarea>
-          </div>
-          <h3 class="section-title">الأصناف المطلوبة</h3>
+        <button class="link-btn whatsapp" (click)="sendWhatsApp(o)">
+          واتساب
+        </button>
 
-          <div class="table-wrapper inner">
-            <table class="tbl lines-table">
-              <thead>
-                <tr>
-                  <th>الصنف</th>
-                  <th>الكمية</th>
-                  <th>ملاحظة</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody formArrayName="lines">
-                <tr
-                  *ngFor="let line of lines.controls; let i = index"
-                  [formGroupName]="i"
-                >
-                  <td data-label="الصنف">
-                    <select formControlName="itemId">
-                      <option [ngValue]="null">اختر صنف</option>
-                      <option *ngFor="let it of items" [ngValue]="it.id">
-                        {{ it.name }}
-                      </option>
-                    </select>
-                  </td>
-                  <td data-label="الكمية">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      formControlName="quantity"
-                    />
-                  </td>
-                  <td data-label="ملاحظة">
-                    <input type="text" formControlName="notes" />
-                  </td>
-                  <td data-label="" class="actions-cell">
-                    <button
-                      type="button"
-                      class="btn link danger"
-                      (click)="removeLine(i)"
-                    >
-                      ×
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="row add-line-row">
-            <button type="button" class="btn" (click)="addLine()">
-              + إضافة صنف
-            </button>
-          </div>
-        </div>
-
-        <div class="footer">
-          <button type="button" class="btn" (click)="closeForm()">إلغاء</button>
-          <button type="submit" class="btn primary">حفظ الطلبية</button>
-        </div>
-      </form>
+        <button class="link-btn success"
+                (click)="receiveOrder(o)"
+                [disabled]="isReceived(o)">
+          استلام
+        </button>
+      </div>
     </div>
+
   </div>
 </div>

@@ -244,38 +244,38 @@
     }
   }
 
-  @media (max-width: 900px) {
-    .top-row {
-      flex-direction: column;
-      align-items: flex-start;
-    }
+  // @media (max-width: 900px) {
+  //   .top-row {
+  //     flex-direction: column;
+  //     align-items: flex-start;
+  //   }
 
-    .inventory-table {
-      min-width: 0;
-      display: block;
+  //   .inventory-table {
+  //     min-width: 0;
+  //     display: block;
 
-      thead {
-        display: none;
-      }
+  //     thead {
+  //       display: none;
+  //     }
 
-      tbody tr {
-        display: block;
-        margin-bottom: 10px;
-        border: 1px solid #f1f5f9;
-        border-radius: 8px;
-        padding: 8px;
-      }
+  //     tbody tr {
+  //       display: block;
+  //       margin-bottom: 10px;
+  //       border: 1px solid #f1f5f9;
+  //       border-radius: 8px;
+  //       padding: 8px;
+  //     }
 
-      tbody td {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 8px;
-        border-bottom: none;
-      }
+  //     tbody td {
+  //       display: flex;
+  //       justify-content: space-between;
+  //       padding: 6px 8px;
+  //       border-bottom: none;
+  //     }
 
-      tbody td input {
-        width: 80px;
-      }
-    }
-  }
+  //     tbody td input {
+  //       width: 80px;
+  //     }
+  //   }
+  // }
 }

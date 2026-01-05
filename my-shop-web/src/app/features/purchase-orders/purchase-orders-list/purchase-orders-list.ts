@@ -1,375 +1,264 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {
-  FormArray,
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-  FormsModule
-} from '@angular/forms';
+import { CommonModule, DatePipe, CurrencyPipe} from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 
 import { PurchaseOrdersService } from '../../../services/purchase-orders.service';
-import { VendorsService } from '../../../services/vendors.service';
-import { ItemsService } from '../../../services/items.service';
-
-import {
-  PurchaseOrder,
-  PurchaseOrderLine,
-} from '../../../models/purchase-order';
-import { Vendor } from '../../../models/vendor';
 import { Item } from '../../../models/item';
+
+export type PeriodFilter = 'day' | 'week' | 'month' | 'year' | 'all';
+
+export interface PurchaseOrderLineShort {
+  itemId: number;
+  item: Item;
+  orderedQuantity: number;
+}
+
+export interface PurchaseOrderListItem {
+  id: number;
+  orderDate: string;           // ISO String
+  vendorName: string;
+  linesCount: number;
+  notes?: string | null;
+  status?: number | null;
+  totalAmount?: number;
+  isReceived?: boolean;
+
+  // لو السيرفر برجع الأسطر:
+  lines?: PurchaseOrderLineShort[];
+}
 
 @Component({
   selector: 'app-purchase-orders-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    DatePipe,
+    CurrencyPipe
+  ],
+  providers: [DatePipe],
   templateUrl: './purchase-orders-list.html',
-  styleUrls: ['./purchase-orders-list.scss'],
+  styleUrls: ['./purchase-orders-list.scss']
 })
 export class PurchaseOrdersList implements OnInit {
-  private fb = inject(FormBuilder);
+
   private poService = inject(PurchaseOrdersService);
-  private vendorsService = inject(VendorsService);
-  private itemsService = inject(ItemsService);
+  private router = inject(Router);
+  private datePipe = inject(DatePipe);
 
-  orders: PurchaseOrder[] = [];
-  vendors: Vendor[] = [];
-  items: Item[] = [];
-
-  form!: FormGroup;
-  isFormOpen = false;
-  isEditMode = false;
   loading = false;
+  error: string | null = null;
 
-   // فلتر الفترة
-   filterPeriod: 'all' | 'day' | 'week' | 'month' | 'year' = 'month';
-   filterDate: string = new Date().toISOString().substring(0, 10); // اليوم
- 
-   // فلتر المورد
-   filterVendor: string = '';
+  orders: PurchaseOrderListItem[] = [];
+  filteredOrders: PurchaseOrderListItem[] = [];
+
+  // الفلاتر
+  filterPeriod: PeriodFilter = 'month';
+  filterBaseDate: string = new Date().toISOString().substring(0, 10);
+  filterVendor: string = '';
+
+  // ملخص
+  get totalOrders(): number {
+    return this.filteredOrders.length;
+  }
+
+  get totalLines(): number {
+    return this.filteredOrders.reduce((sum, o) => sum + (o.linesCount || 0), 0);
+  }
+
+  get totalAmount(): number {
+    return this.filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  }
 
   ngOnInit(): void {
-    this.buildForm();
-    this.loadLookups();
     this.loadOrders();
-  }
-
-  // ---------- Form ----------
-
-  private buildForm(): void {
-    this.form = this.fb.group({
-      id: [0],
-      vendorId: [null],
-      orderDate: [this.today(), Validators.required],
-      notes: [''],
-      lines: this.fb.array([]),
-    });
-  }
-
-  private today(): string {
-    const d = new Date();
-    return d.toISOString().substring(0, 10);
-  }
-
-  get lines(): FormArray {
-    return this.form.get('lines') as FormArray;
-  }
-
-  private buildLineGroup(line?: PurchaseOrderLine): FormGroup {
-    return this.fb.group({
-      id: [line?.id ?? 0],
-      itemId: [line?.itemId ?? null, Validators.required],
-      quantity: [
-        line?.quantity ?? 1,
-        [Validators.required, Validators.min(0.01)],
-      ],
-      notes: [line?.notes ?? ''],
-    });
-  }
-
-  addLine(): void {
-    this.lines.push(this.buildLineGroup());
-  }
-
-  removeLine(index: number): void {
-    if (this.lines.length <= 1) {
-      this.lines.at(0).reset({
-        id: 0,
-        itemId: null,
-        quantity: 1,
-        notes: '',
-      });
-      return;
-    }
-    this.lines.removeAt(index);
-  }
-
-  // ---------- Load data ----------
-
-  private loadLookups(): void {
-    this.vendorsService.getAll().subscribe({
-      next: (v) => (this.vendors = v),
-      error: (err) => console.error('Error loading vendors', err),
-    });
-
-    this.itemsService.getAll().subscribe({
-      next: (i) => (this.items = i),
-      error: (err) => console.error('Error loading items', err),
-    });
   }
 
   loadOrders(): void {
     this.loading = true;
+    this.error = null;
+
     this.poService.getAll().subscribe({
-      next: (res) => {
-        this.orders = res;
+      next: (res: any[]) => {
+        // هنا بنحوّل الريسبونس لـ PurchaseOrderListItem
+        this.orders = (res || []).map(o => {
+          const dateStr: string = o.orderDate ? o.orderDate.toString() : '';
+
+          return {
+            id: o.id,
+            orderDate: dateStr,
+            vendorName: o.vendorName || o.vendor?.name || 'بدون مورد',
+            linesCount: o.linesCount ?? o.lines?.length ?? 0,
+            notes: o.notes ?? '',
+            status: o.status ?? '',
+            totalAmount: (o.lines ?? []).reduce(
+              (sum: number, l: any) =>
+                sum + ((l.orderedQuantity ?? 0) * (l.purchasePrice ?? 0)),
+              0
+            ),
+            isReceived: (o.status ?? '').toString().toLowerCase().includes('received'),
+            lines: o.lines?.map((l: any) => ({
+              itemId: l.itemId,
+              item: l.item || '',
+              orderedQuantity: l.orderedQuantity || 0,
+              purchasePrice: l.purchasePrice || 0,
+              
+            }))
+          } as PurchaseOrderListItem;
+        });
+
+        this.applyFilters();
         this.loading = false;
       },
-      error: () => {
+      error: (err: any) => {
+        console.error(err);
+        this.error = 'فشل تحميل طلبات الشراء.';
         this.loading = false;
-        alert('فشل تحميل الطلبيات');
-      },
-    });
-  }
-
-  // ---------- Open / Close form ----------
-
-  openAdd(): void {
-    this.isEditMode = false;
-    this.form.reset({
-      id: 0,
-      vendorId: null,
-      orderDate: this.today(),
-      notes: '',
-    });
-    this.lines.clear();
-    this.addLine();
-    this.isFormOpen = true;
-  }
-
-  openEdit(order: PurchaseOrder): void {
-    this.isEditMode = true;
-
-    this.form.reset({
-      id: order.id,
-      vendorId: order.vendorId ?? null,
-      orderDate: order.orderDate.substring(0, 10),
-      notes: order.notes ?? '',
-    });
-
-    this.lines.clear();
-    const orderLines = Array.isArray(order.lines) ? order.lines : [];
-    if (!orderLines.length) {
-      this.addLine();
-    } else {
-      for (const l of orderLines) {
-        this.lines.push(this.buildLineGroup(l));
       }
-    }
-
-    this.isFormOpen = true;
-  }
-
-  closeForm(): void {
-    this.isFormOpen = false;
-  }
-
-  // ---------- Save / Delete ----------
-
-  save(): void {
-    if (this.form.invalid || this.lines.length === 0) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    const raw = this.form.value;
-
-    const dto: PurchaseOrder = {
-      id: raw.id ?? 0,
-      vendorId: raw.vendorId ? Number(raw.vendorId) : null,
-      orderDate: raw.orderDate,
-      status: raw.status,
-      notes: raw.notes ?? null,
-      lines: (raw.lines as any[]).map((l) => ({
-        id: l.id ?? 0,
-        itemId: Number(l.itemId),
-        quantity: Number(l.quantity),
-        notes: l.notes ?? null,
-      })),
-    };
-
-    if (this.isEditMode) {
-      this.poService.update(dto).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadOrders();
-        },
-        error: () => alert('فشل تعديل الطلبية'),
-      });
-    } else {
-      this.poService.create(dto).subscribe({
-        next: () => {
-          this.closeForm();
-          this.loadOrders();
-        },
-        error: () => alert('فشل إنشاء الطلبية'),
-      });
-    }
-  }
-
-  delete(order: PurchaseOrder): void {
-    if (!confirm(`حذف طلبية رقم ${order.id}؟`)) return;
-
-    this.poService.delete(order.id).subscribe({
-      next: () => this.loadOrders(),
-      error: () => alert('فشل حذف الطلبية'),
     });
   }
 
-  // ---------- WhatsApp ----------
-
-  private buildWhatsAppMessage(order: PurchaseOrder): string {
-    const vendorName = order.vendor?.name ?? 'المورد';
-    const date = order.orderDate?.substring(0, 10) ?? '';
-
-    let msg = `*طلبية شراء*\n`;
-    msg += `التاريخ: ${date}\n`;
-    msg += `المورد: ${vendorName}\n`;
-    msg += `-----------------------------\n`;
-
-    if (order.lines && order.lines.length) {
-      order.lines.forEach((line, index) => {
-        const itemName =
-          (line as any).item?.name ??
-          this.items.find((x) => x.id === line.itemId)?.name ??
-          `صنف رقم ${line.itemId}`;
-        msg += `${index + 1}- ${itemName} : ${line.quantity}\n`;
-      });
-    } else {
-      msg += `لا توجد أصناف في هذه الطلبية.\n`;
-    }
-
-    if (order.notes) {
-      msg += `-----------------------------\n`;
-      msg += `ملاحظات:\n${order.notes}\n`;
-    }
-    msg += `\n-----------------------------\n`;
-   // msg += `\n*تم إنشاء الطلبية من نظام المجمدات.*`;
-    return msg;
-  }
-
-  sendWhatsApp(order: PurchaseOrder): void {
-    const message = this.buildWhatsAppMessage(order);
-    const encodedMessage = encodeURIComponent(message);
-
-    const rawNumber =
-      (order.vendor as any)?.whatsApp ||
-      (order.vendor as any)?.phone ||
-      '';
-
-    const cleanNumber = rawNumber.replace(/[^0-9]/g, '');
-
-    if (cleanNumber) {
-      const url = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
-      window.open(url, '_blank');
-    } else {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(message).catch(() => {});
-      }
-      alert(
-        'ما في رقم واتساب محفوظ للمورد.\nتم نسخ نص الطلبية؛ الصقه في محادثة الواتساب المناسبة.'
-      );
-      const url = `https://web.whatsapp.com/send?text=${encodedMessage}`;
-      window.open(url, '_blank');
-    }
-  }
-  private getPeriodRange(): { start: Date | null; end: Date | null } {
+  // حساب from/to حسب الفترة المختارة
+  private getDateRange(): { from?: Date; to?: Date } {
     if (this.filterPeriod === 'all') {
-      return { start: null, end: null };
+      return {};
     }
 
-    const base = new Date(this.filterDate);
-    if (Number.isNaN(base.getTime())) {
-      return { start: null, end: null };
-    }
-
-    let start = new Date(base);
-    let end = new Date(base);
+    const base = new Date(this.filterBaseDate);
+    let from = new Date(base);
+    let to = new Date(base);
 
     switch (this.filterPeriod) {
       case 'day':
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
+        // from و to نفس اليوم
         break;
 
-      case 'week':
-        // نخلي بداية الأسبوع الاثنين (تعديل بسيط)
-        const day = base.getDay(); // 0=Sun..6=Sat
-        const diff = (day + 6) % 7; // عدد الأيام من الاثنين
-        start = new Date(base);
-        start.setDate(base.getDate() - diff);
-        start.setHours(0, 0, 0, 0);
-
-        end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        end.setHours(23, 59, 59, 999);
+      case 'week': {
+        const day = base.getDay(); // 0..6
+        const diffToSaturday = (day + 1) % 7; // بس نعتبر السبت بداية الاسبوع مثلاً
+        from = new Date(base);
+        from.setDate(base.getDate() - diffToSaturday);
+        to = new Date(from);
+        to.setDate(from.getDate() + 6);
         break;
+      }
 
       case 'month':
-        start = new Date(base.getFullYear(), base.getMonth(), 1, 0, 0, 0, 0);
-        end = new Date(base.getFullYear(), base.getMonth() + 1, 0, 23, 59, 59, 999);
+        from = new Date(base.getFullYear(), base.getMonth(), 1);
+        to = new Date(base.getFullYear(), base.getMonth() + 1, 0);
         break;
 
       case 'year':
-        start = new Date(base.getFullYear(), 0, 1, 0, 0, 0, 0);
-        end = new Date(base.getFullYear(), 11, 31, 23, 59, 59, 999);
+        from = new Date(base.getFullYear(), 0, 1);
+        to = new Date(base.getFullYear(), 11, 31);
         break;
     }
 
-    return { start, end };
-  }
-  get filteredOrders(): PurchaseOrder[] {
-    let result = [...this.orders];
+    // نضبط time جزء الساعة
+    from.setHours(0, 0, 0, 0);
+    to.setHours(23, 59, 59, 999);
 
-    // فلتر الفترة
-    const { start, end } = this.getPeriodRange();
-    if (start && end) {
-      result = result.filter(o => {
-        const d = new Date(o.orderDate); // عدّل لو اسم الحقل مختلف
-        if (Number.isNaN(d.getTime())) return true;
-        return d >= start && d <= end;
-      });
-    }
-
-    // فلتر المورد بالاسم
-    if (this.filterVendor && this.filterVendor.trim().length > 0) {
-      const term = this.filterVendor.trim().toLowerCase();
-      result = result.filter(o =>
-        (o.vendor?.name || '').toLowerCase().includes(term)   // عدّل vendorName لو اسمك مختلف
-      );
-    }
-
-    return result;
+    return { from, to };
   }
 
-  markAsReceived(order: PurchaseOrder): void {
-    if (order.status === 'Received') {
+  applyFilters(): void {
+    const vendorTerm = (this.filterVendor || '').trim().toLowerCase();
+    const { from, to } = this.getDateRange();
+
+    this.filteredOrders = this.orders.filter(o => {
+      const d = new Date(o.orderDate);
+
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+
+      if (vendorTerm) {
+        const name = (o.vendorName || '').toLowerCase();
+        if (!name.includes(vendorTerm)) return false;
+      }
+
+      return true;
+    });
+  }
+
+  onPeriodChange(): void {
+    this.applyFilters();
+  }
+
+  onBaseDateChange(): void {
+    this.applyFilters();
+  }
+
+  onVendorFilterChange(): void {
+    this.applyFilters();
+  }
+
+  // إنشاء طلبية جديدة
+  newOrder(): void {
+    this.router.navigate(['/purchase-orders/create']);
+    // لو مسمي صفحة الإضافة باسم مختلف عدّل المسار
+  }
+
+  editOrder(o: PurchaseOrderListItem): void {
+    this.router.navigate(['/purchase-orders', o.id]);
+  }
+
+  receiveOrder(o: PurchaseOrderListItem): void {
+    this.router.navigate(['/purchase-orders', o.id, 'receive']);
+  }
+
+  deleteOrder(o: PurchaseOrderListItem): void {
+    if (!confirm('هل أنت متأكد من حذف هذه الطلبية؟')) {
       return;
     }
 
-    if (!confirm(`هل تريد تحديد الطلبية رقم ${order.id} كمستلمة؟`)) {
-      return;
-    }
-
-    this.poService.markAsReceived(order.id).subscribe({
+    this.poService.delete(o.id).subscribe({
       next: () => {
-        // إمّا نعيد تحميل الكل:
-        this.loadOrders();
-
-        // أو نحدثها محلياً:
-        // order.status = 'Received';
+        this.orders = this.orders.filter(x => x.id !== o.id);
+        this.applyFilters();
+      },
+      error: (err: any) => {
+        console.error(err);
+        alert('فشل حذف الطلبية.');
       }
     });
+  }
+
+  // رسالة الواتساب
+  sendWhatsApp(o: PurchaseOrderListItem): void {
+    const dateStr = this.datePipe.transform(o.orderDate, 'yyyy-MM-dd') ?? '';
+    const vendor = o.vendorName || '-';
+
+    let message = `طلب شراء%0A`;
+    message += `التاريخ: ${dateStr}%0A`;
+    message += `المورد: ${encodeURIComponent(vendor)}%0A`;
+    message += `-------------------------%0A`;
+
+    if (o.lines && o.lines.length) {
+      o.lines.forEach((l, index) => {
+        const lineText = `${index + 1}- ${l.item.name} : ${l.orderedQuantity} ${l.item.unit}`;
+        message += encodeURIComponent(lineText) + '%0A';
+      });
+    } else {
+      message += encodeURIComponent('تفاصيل الأصناف غير متوفرة في هذه القائمة.') + '%0A';
+    }
+
+    const url = `https://wa.me/?text=${message}`;
+    window.open(url, '_blank');
+  }
+
+  // نص حالة عربي بسيط
+  getStatusLabel(o: PurchaseOrderListItem): string {
+    var ss='';
+    const s = (o.status);
+    if (s==2) {ss= 'مستلمة'};
+    if (s==0) {ss= 'مسودة'};
+    if (s==3) {ss= 'مرسلة'};
+    return ss;
+  }
+
+  isReceived(o: PurchaseOrderListItem): boolean {
+    return !!o.isReceived || o.status ==2;
   }
 }

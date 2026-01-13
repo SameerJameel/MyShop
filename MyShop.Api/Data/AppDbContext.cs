@@ -19,6 +19,8 @@ public class AppDbContext : DbContext
     public DbSet<Debt> Debts { get; set; } = null!;
     public DbSet<Inventory> Inventories { get; set; }
     public DbSet<InventoryLine> InventoryLines { get; set; }
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // ItemVendor: composite key
@@ -93,6 +95,27 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Debt>()
             .Property(x => x.Amount)
             .HasColumnType("decimal(18,2)");
+
+        modelBuilder.Entity<StockMovement>()
+    .Property(x => x.Qty)
+    .HasColumnType("decimal(18,3)");
+
+        modelBuilder.Entity<StockMovement>()
+            .Property(x => x.UnitCost)
+            .HasColumnType("decimal(18,4)");
+
+        modelBuilder.Entity<StockMovement>()
+            .Property(x => x.AvgCostAfter)
+            .HasColumnType("decimal(18,4)");
+
+        modelBuilder.Entity<Item>()
+            .Property(x => x.OnHandQty)
+            .HasColumnType("decimal(18,3)");
+
+        modelBuilder.Entity<Item>()
+            .Property(x => x.AvgCost)
+            .HasColumnType("decimal(18,4)");
+
 
         base.OnModelCreating(modelBuilder);
     }

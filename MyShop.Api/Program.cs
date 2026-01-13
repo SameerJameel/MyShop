@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyShop.Api.Data;
+using MyShop.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
-
+builder.Services.AddScoped<StockService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

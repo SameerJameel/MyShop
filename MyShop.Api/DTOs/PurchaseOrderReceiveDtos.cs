@@ -33,7 +33,7 @@
     // نموذج الاستلام اللي جاي من Angular (POST)
     public class PurchaseOrderReceiveRequest
     {
-        public DateTime ReceiveDate { get; set; }
+        //public DateTime? ReceiveDate { get; set; }
         public decimal DiscountAmount { get; set; }
         public decimal PaidAmount { get; set; }
         public string? Notes { get; set; }

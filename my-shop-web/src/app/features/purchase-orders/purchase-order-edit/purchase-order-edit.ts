@@ -1,12 +1,20 @@
-import { CommonModule, DatePipe ,CurrencyPipe} from '@angular/common';
+import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators,FormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { VendorsService } from '../../../services/vendors.service';
 import { ItemsService } from '../../../services/items.service';
 import { PurchaseOrdersService } from '../../../services/purchase-orders.service';
 import { PurchaseOrderCreate, PurchaseOrderDetails, PurchaseOrderLine, PurchaseOrderUpdate } from '../../../models/purchase-order';
+
+enum PageMode {
+  CREATE = 'create',
+  EDIT = 'edit',
+  RECEIVE = 'receive',
+  PAYMENT = 'payment'
+}
+
 @Component({
   selector: 'app-purchase-order-edit',
   standalone: true,
@@ -21,7 +29,7 @@ import { PurchaseOrderCreate, PurchaseOrderDetails, PurchaseOrderLine, PurchaseO
   templateUrl: './purchase-order-edit.html',
   styleUrls: ['./purchase-order-edit.scss']
 })
-export class PurchaseOrderEdit   {
+export class PurchaseOrderEdit {
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -35,15 +43,16 @@ export class PurchaseOrderEdit   {
   saving = false;
   error: string | null = null;
 
-  id: number  = 0;
-  status: string = 'Draft';
+  id: number = 0;
+  status: number = 0;
+  currentMode: PageMode = PageMode.CREATE;
 
   items: any[] = [];
   vendors: any[] = [];
 
   form = this.fb.group({
-    vendorId: this.fb.control<number | null>(null, Validators.required),
-    orderDate: this.fb.control<string>(this.toDateInput(new Date()), Validators.required),
+    vendorId: this.fb.control<number | null>(null),
+    orderDate: this.fb.control<string>(this.toDateInput(new Date())),
     discountAmount: this.fb.control<number | null>(null),
     paidAmount: this.fb.control<number | null>(null),
     notes: this.fb.control<string>(''),
@@ -54,14 +63,132 @@ export class PurchaseOrderEdit   {
     return this.form.get('lines') as FormArray<FormGroup>;
   }
 
+  // Mode Getters
+  get isCreateMode(): boolean { return this.currentMode === PageMode.CREATE; }
+  get isEditMode(): boolean { return this.currentMode === PageMode.EDIT; }
+  get isReceiveMode(): boolean { return this.currentMode === PageMode.RECEIVE; }
+  get isPaymentMode(): boolean { return this.currentMode === PageMode.PAYMENT; }
+
+  // Field Visibility
+  get showDiscountAmount(): boolean { return this.isReceiveMode || this.isPaymentMode; }
+  get showPaidAmount(): boolean { return this.isReceiveMode || this.isPaymentMode; }
+  get showReceivedQuantity(): boolean { return this.isReceiveMode; }
+  get showLines(): boolean { return !this.isPaymentMode; }
+
+  // Field Disabled State
+  get isVendorDisabled(): boolean { return this.isReceiveMode; }
+  get isOrderDateDisabled(): boolean { return this.isEditMode || this.isReceiveMode; }
+  get isOrderedQuantityDisabled(): boolean { return this.isReceiveMode; }
+
+  // Button Visibility
+  get showSaveButton(): boolean { return this.isCreateMode || this.isEditMode || this.isPaymentMode; }
+  get showReceiveButton(): boolean { return this.isReceiveMode; }
+
+  // Button Text
+  get saveButtonText(): string {
+    if (this.saving) return 'جارِ الحفظ...';
+    return this.isPaymentMode ? 'حفظ الدفعة' : 'حفظ';
+  }
+
   ngOnInit() {
+    // Determine mode from route
+    const url = this.router.url;
+    if (url.includes('/receive')) {
+      this.currentMode = PageMode.RECEIVE;
+    } else if (url.includes('/edit')) {
+      this.currentMode = PageMode.EDIT;
+    } else if (url.includes('/payment')) {
+      this.currentMode = PageMode.PAYMENT;
+    } else {
+      this.currentMode = PageMode.CREATE;
+    }
+
     this.id = this.route.snapshot.paramMap.get('id') ? Number(this.route.snapshot.paramMap.get('id')) : 0;
 
-
     this.loadLookups(() => {
-      if (this.id) this.loadForEdit(this.id);
-      else this.addLine(); // أول سطر
+      if (this.id) {
+        this.loadForEdit(this.id);
+      } else {
+        if (!this.isPaymentMode) {
+          this.addLine(); // Add first line only if not payment mode
+        }
+      }
+      this.updateValidation(); // Set validation after mode is determined
     });
+  }
+
+  // ---------- Validation Update ----------
+  private updateValidation() {
+    // Main form fields
+    const vendorIdControl = this.form.get('vendorId');
+    const orderDateControl = this.form.get('orderDate');
+    const discountControl = this.form.get('discountAmount');
+    const paidControl = this.form.get('paidAmount');
+
+    // Clear all validators first
+    vendorIdControl?.clearValidators();
+    orderDateControl?.clearValidators();
+    discountControl?.clearValidators();
+    paidControl?.clearValidators();
+
+    // Apply validators based on mode
+    if (this.isCreateMode) {
+      vendorIdControl?.setValidators(Validators.required);
+      orderDateControl?.setValidators(Validators.required);
+    } else if (this.isReceiveMode) {
+      discountControl?.setValidators(Validators.required);
+      paidControl?.setValidators(Validators.required);
+    } else if (this.isPaymentMode) {
+      vendorIdControl?.setValidators(Validators.required);
+      orderDateControl?.setValidators(Validators.required);
+      discountControl?.setValidators(Validators.required);
+      paidControl?.setValidators(Validators.required);
+    }
+
+    // Update validity
+    vendorIdControl?.updateValueAndValidity();
+    orderDateControl?.updateValueAndValidity();
+    discountControl?.updateValueAndValidity();
+    paidControl?.updateValueAndValidity();
+
+    // Update line validations
+    this.lines.controls.forEach((line, index) => {
+      this.updateLineValidation(index);
+    });
+  }
+
+  private updateLineValidation(index: number) {
+    const line = this.lines.at(index);
+    const itemIdControl = line.get('itemId');
+    const orderedQtyControl = line.get('orderedQuantity');
+    const receivedQtyControl = line.get('receivedQuantity');
+    const purchasePriceControl = line.get('purchasePrice');
+    const salePriceControl = line.get('salePrice');
+
+    // Clear validators
+    itemIdControl?.clearValidators();
+    orderedQtyControl?.clearValidators();
+    receivedQtyControl?.clearValidators();
+    purchasePriceControl?.clearValidators();
+    salePriceControl?.clearValidators();
+
+    // Apply validators based on mode
+    if (this.isCreateMode || this.isEditMode) {
+      itemIdControl?.setValidators(Validators.required);
+      orderedQtyControl?.setValidators([Validators.required, Validators.min(1)]);
+    } else if (this.isReceiveMode) {
+      itemIdControl?.setValidators(Validators.required);
+      receivedQtyControl?.setValidators([Validators.required, Validators.min(0)]);
+      purchasePriceControl?.setValidators([Validators.required, Validators.min(0)]);
+      salePriceControl?.setValidators([Validators.required, Validators.min(0)]);
+    }
+
+    // Update validity
+    itemIdControl?.updateValueAndValidity();
+    orderedQtyControl?.updateValueAndValidity();
+    receivedQtyControl?.updateValueAndValidity();
+    purchasePriceControl?.updateValueAndValidity();
+    salePriceControl?.updateValueAndValidity();
   }
 
   // ---------- Lookups ----------
@@ -97,7 +224,6 @@ export class PurchaseOrderEdit   {
         this.status = po.status;
         this.patchFromDetails(po);
         this.loading = false;
-
       },
       error: (err) => {
         console.error(err);
@@ -117,24 +243,29 @@ export class PurchaseOrderEdit   {
     });
 
     this.lines.clear();
-    for (const ln of po.lines || []) {
-      this.lines.push(this.createLine(ln, false));
+    if (!this.isPaymentMode) {
+      for (const ln of po.lines || []) {
+        this.lines.push(this.createLine(ln, false));
+      }
+      if (this.lines.length === 0) this.addLine();
     }
-    if (this.lines.length === 0) this.addLine();
   }
 
   // ---------- Lines ----------
   addLine() {
-    this.lines.push(this.createLine(undefined, true));
+    const newLine = this.createLine(undefined, true);
+    this.lines.push(newLine);
+    this.updateLineValidation(this.lines.length - 1);
   }
 
   createLine(initial?: Partial<PurchaseOrderLine>, expanded = true): FormGroup {
     return this.fb.group({
       id: [initial?.id ?? null],
-      itemId: [initial?.itemId ?? null, Validators.required],
+      itemId: [initial?.itemId ?? null],
       name: [initial?.item?.name ?? ''],
-      orderedQuantity: [initial?.orderedQuantity ?? 1, [Validators.required, Validators.min(1)]],
-      purchasePrice: [initial?.purchasePrice ?? null, Validators.required],
+      orderedQuantity: [initial?.orderedQuantity ?? 1],
+      receivedQuantity: [initial?.receivedQuantity ?? null],
+      purchasePrice: [initial?.purchasePrice ?? null],
       salePrice: [initial?.salePrice ?? null],
       notes: [initial?.notes ?? ''],
       expanded: [expanded] // UI only
@@ -157,7 +288,9 @@ export class PurchaseOrderEdit   {
 
   removeLine(i: number) {
     this.lines.removeAt(i);
-    if (this.lines.length === 0) this.addLine();
+    if (this.lines.length === 0 && !this.isPaymentMode) {
+      this.addLine();
+    }
   }
 
   onItemChange(i: number) {
@@ -192,13 +325,20 @@ export class PurchaseOrderEdit   {
       return;
     }
 
-    // تجهيز payload بدون expanded (UI)
+    // Payment mode handling
+    if (this.isPaymentMode) {
+      this.savePayment();
+      return;
+    }
+
+    // Regular save for Create/Edit modes
     const raw = this.form.getRawValue();
     const lines = (raw.lines || []).map((x: any) => ({
       id: x.id ?? undefined,
       itemId: x.itemId,
       name: x.name,
       orderedQuantity: Number(x.orderedQuantity),
+      receivedQuantity: Number(x.receivedQuantity),
       purchasePrice: Number(x.purchasePrice),
       salePrice: x.salePrice === null || x.salePrice === '' ? null : Number(x.salePrice),
       notes: x.notes ?? null
@@ -207,7 +347,6 @@ export class PurchaseOrderEdit   {
     const payloadBase: PurchaseOrderCreate = {
       vendorId: raw.vendorId!,
       orderDate: this.toIsoFromDateInput(raw.orderDate!),
-      //receivedDate:'',//this.toIsoFromDateInput(raw.receivedDate!),
       discountAmount: raw.discountAmount ?? null,
       paidAmount: raw.paidAmount ?? null,
       notes: raw.notes ?? null,
@@ -216,7 +355,7 @@ export class PurchaseOrderEdit   {
 
     this.saving = true;
 
-    if (!this.id) {
+    if (this.isCreateMode) {
       this.poService.createPO(payloadBase).subscribe({
         next: (created) => {
           this.saving = false;
@@ -244,6 +383,80 @@ export class PurchaseOrderEdit   {
     }
   }
 
+  // ---------- Payment ----------
+  savePayment() {
+    const raw = this.form.getRawValue();
+    const payload = {
+      vendorId: raw.vendorId!,
+      orderDate: this.toIsoFromDateInput(raw.orderDate!),
+      discountAmount: Number(raw.discountAmount ?? 0),
+      paidAmount: Number(raw.paidAmount ?? 0),
+      notes: raw.notes ?? null
+    };
+
+    this.saving = true;
+
+    // Replace with actual payment service call
+    // this.poService.savePayment(payload).subscribe({
+    //   next: () => {
+    //     this.saving = false;
+    //     this.router.navigate(['/purchase-orders']);
+    //   },
+    //   error: (err) => {
+    //     console.error(err);
+    //     this.error = 'فشل حفظ الدفعة.';
+    //     this.saving = false;
+    //   }
+    // });
+
+    // Temporary mock
+    setTimeout(() => {
+      this.saving = false;
+      this.router.navigate(['/purchase-orders']);
+    }, 1000);
+  }
+
+  // ---------- Receive ----------
+  submit() {
+    this.error = null;
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.error = 'يرجى تعبئة الحقول المطلوبة.';
+      return;
+    }
+
+    const payload = {
+      poId: this.id,
+      discountAmount: Number(this.form.value.discountAmount ?? 0),
+      paidAmount: Number(this.form.value.paidAmount ?? 0),
+      lines: (this.form.value.lines ?? []).map((l: any) => ({
+        lineId: Number(l.id),
+        itemId: Number(l.itemId),
+        itemName: l.name,
+        orderedQuantity: Number(l.orderedQuantity),
+        receivedQuantity: Number(l.receivedQuantity),
+        purchasePrice: Number(l.purchasePrice),
+        salePrice: Number(l.salePrice),
+        notes: l.notes ?? '',
+      })),
+    };
+
+    this.saving = true;
+
+    this.poService.receive(this.id, payload).subscribe({
+      next: () => {
+        this.saving = false;
+        this.router.navigate(['/purchase-orders']);
+      },
+      error: (err: unknown) => {
+        console.error(err);
+        this.error = 'فشل تأكيد الاستلام.';
+        this.saving = false;
+      }
+    });
+  }
+
   cancel() {
     this.router.navigate(['/purchase-orders']);
   }
@@ -267,39 +480,8 @@ export class PurchaseOrderEdit   {
   }
 
   private toIsoFromDateInput(v: string): string {
-    // v = yyyy-MM-dd
     if (!v) return '';
     const [y, m, d] = v.split('-').map(n => +n);
-    // create a UTC date at midnight
     return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)).toISOString();
-  }
-
-  canEdit(): boolean {
-    // بعد الاستلام ممنوع تعديل
-    return this.status !== 'Received' && this.status !== 'Cancelled';
-  }
-
-  submit() {
-    const payload = {
-      poId: this.id,
-      //receivedDate: this.form.value.receivedDate,
-      discountAmount: Number(this.form.value.discountAmount ?? 0),
-      paidAmount: Number(this.form.value.paidAmount ?? 0),
-      lines: (this.form.value.lines ?? []).map((l: any) => ({
-        itemId: Number(l.itemId),
-        itemName:l.itemName,
-        orderedQty:l.orderedQuantity,
-        receivedQty: Number(l.receivedQty),
-        purchasePrice: Number(l.purchasePrice),
-        salePrice: Number(l.salePrice),
-        notes: l.notes ?? '',
-      })),
-    };
-   // const ss= this.route.snapshot.paramMap.get('id') ? Number(this.route.snapshot.paramMap.get('id')) : null;
-    
-    this.poService.receive(this.id, payload).subscribe({
-      next: () => this.router.navigate(['/purchase-orders']),
-      error: (err: unknown) => console.error(err),
-    });
   }
 }

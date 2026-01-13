@@ -1,0 +1,107 @@
+<div class="balances-page" dir="rtl">
+  <div class="header">
+    <div>
+      <h2>الأرصدة</h2>
+      <div class="sub">أرصدة الأصناف مبنية على محرك المخزون (OnHandQty + AvgCost)</div>
+    </div>
+
+    <button class="btn" (click)="refresh()" [disabled]="loading">تحديث</button>
+  </div>
+
+  <div class="kpis card" *ngIf="summary">
+    <div class="kpi">
+      <div class="label">قيمة المخزون</div>
+      <div class="value">{{ summary.totalStockValue | number:'1.0-2' }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="label">إجمالي الكميات</div>
+      <div class="value">{{ summary.totalOnHandQty | number:'1.0-2' }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="label">عدد الأصناف</div>
+      <div class="value">{{ summary.itemsCount }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="label">Low Stock</div>
+      <div class="value">{{ summary.lowStockCount }}</div>
+    </div>
+  </div>
+
+  <div class="filters card">
+    <div class="field">
+      <label>بحث</label>
+      <input
+        [value]="search"
+        (input)="onSearchInput(($any($event.target)).value)"
+        placeholder="اسم الصنف..." />
+    </div>
+
+    <div class="field">
+      <label>المجموعة</label>
+      <select [value]="categoryId" (change)="onCategoryChange(($any($event.target)).value)">
+        <option value="0">كل المجموعات</option>
+        <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>الفرز</label>
+      <select [value]="sort" (change)="onSortChange(($any($event.target)).value)">
+        <option value="value_desc">قيمة المخزون (أعلى)</option>
+        <option value="value_asc">قيمة المخزون (أقل)</option>
+        <option value="qty_desc">الكمية (أعلى)</option>
+        <option value="qty_asc">الكمية (أقل)</option>
+        <option value="name_asc">الاسم (أ-ي)</option>
+        <option value="name_desc">الاسم (ي-أ)</option>
+      </select>
+    </div>
+
+    <div class="field checkbox">
+      <label>
+        <input
+          type="checkbox"
+          [checked]="onlyInStock"
+          (change)="onToggleInStock(($any($event.target)).checked)" />
+        فقط المتوفر بالمخزون
+      </label>
+    </div>
+  </div>
+
+  <div class="state" *ngIf="loading">جارِ التحميل...</div>
+  <div class="state empty" *ngIf="!loading && rows.length === 0">لا يوجد بيانات.</div>
+
+  <div class="table card" *ngIf="!loading && rows.length">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الصنف</th>
+          <th>المجموعة</th>
+          <th class="num">الكمية</th>
+          <th class="num">متوسط التكلفة</th>
+          <th class="num">قيمة المخزون</th>
+          <th class="num">آخر تكلفة شراء</th>
+          <th>آخر حركة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of rows; index as i; trackBy: trackById">
+          <td>{{ i + 1 }}</td>
+          <td class="name">
+            {{ r.itemName }}
+            <div class="meta">{{ r.unit || '' }}</div>
+          </td>
+          <td>{{ r.categoryName || '-' }}</td>
+          <td class="num">{{ r.onHandQty | number:'1.0-2' }}</td>
+          <td class="num">{{ r.avgCost | number:'1.0-4' }}</td>
+          <td class="num strong">{{ r.stockValue | number:'1.0-2' }}</td>
+          <td class="num">{{ (r.lastPurchaseCost ?? 0) | number:'1.0-4' }}</td>
+          <td>{{ r.lastMovementAt ? (r.lastMovementAt | date:'yyyy-MM-dd HH:mm') : '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

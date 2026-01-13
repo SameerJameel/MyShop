@@ -1,105 +1,112 @@
-  <nav class="top-nav" dir="rtl">
-    <div class="top-nav__inner">
-  
-      <!-- اللوغو / اسم النظام -->
-      <div class="brand">
-        <div class="brand__logo">
-          <!-- ممكن تحط لوجو صورة هنا -->
-          <span class="brand__icon">🛒</span>
-        </div>
-        <div class="brand__text">
-          <div class="brand__title">My Shop
-          </div>
-          <!-- <div class="brand__subtitle">نظام المبيعات والمخزون</div> -->
-        </div>
+<nav class="top-nav" dir="rtl">
+  <div class="top-nav__inner">
+
+    <!-- اللوغو / اسم النظام -->
+    <div class="brand">
+      <div class="brand__logo">
+        <!-- ممكن تحط لوجو صورة هنا -->
+        <span class="brand__icon">🛒</span>
       </div>
-  
-      <!-- روابط الديسكتوب -->
-      <ul class="nav-links">
-     
-        <li>
-          <a routerLink="/items" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            الأصناف
-          </a>
-        </li>
-  
-        <li>
-          <a routerLink="/categories" routerLinkActive="active">
-            المجموعات
-          </a>
-        </li>
-    
-        <li>
-          <a routerLink="/vendors" routerLinkActive="active">
-            الموردين
-          </a>
-        </li>
-  
-        <li>
-          <a routerLink="/purchase-orders" routerLinkActive="active">
-            طلبات الشراء
-          </a>
-        </li>
+      <div class="brand__text">
+        <div class="brand__title">My Shop
+        </div>
+        <!-- <div class="brand__subtitle">نظام المبيعات والمخزون</div> -->
+      </div>
+    </div>
 
-        <li>
-          <a routerLink="/expenses" routerLinkActive="active">
+    <!-- روابط الديسكتوب -->
+    <ul class="nav-links">
+
+      <li>
+        <a routerLink="/items" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          الأصناف
+        </a>
+      </li>
+
+      <li>
+        <a routerLink="/categories" routerLinkActive="active">
+          المجموعات
+        </a>
+      </li>
+
+      <li>
+        <a routerLink="/vendors" routerLinkActive="active">
+          الموردين
+        </a>
+      </li>
+
+      <li>
+        <a routerLink="/purchase-orders" routerLinkActive="active">
+          طلبات الشراء
+        </a>
+      </li>
+
+      <li>
+        <a routerLink="/expenses" routerLinkActive="active">
           المصاريف
-          </a>
-        </li>
+        </a>
+      </li>
 
-        <li>
-          <a routerLink="/debts" routerLinkActive="active">
-           الديون
-          </a>
-          <li>
+      <li>
+        <a routerLink="/debts" routerLinkActive="active">
+          الديون
+        </a>
+      </li>
+      <!-- <li>
             <a routerLink="/inventory" routerLinkActive="active">
              الجرد
-            </a>
-            <li>
-              <a routerLink="/inventory-list" routerLinkActive="active">
-               قائمة الجرد
-              </a>
-        </li>
-      </ul>
-  
-      <!-- زر الهامبرغر للموبايل -->
-      <button class="burger" type="button" (click)="toggleMenu()">
-        <span [class.open]="isMenuOpen"></span>
-        <span [class.open]="isMenuOpen"></span>
-        <span [class.open]="isMenuOpen"></span>
-      </button>
-    </div>
-  
-    <!-- منيو الموبايل -->
-    <div class="mobile-menu" *ngIf="isMenuOpen">
-      <a routerLink="/items" routerLinkActive="active"[routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
-        الأصناف
-      </a>
-  
-      <a routerLink="/categories" routerLinkActive="active" (click)="closeMenu()">
-        المجموعات
-      </a>
-  
-      <a routerLink="/vendors" routerLinkActive="active" (click)="closeMenu()">
-        الموردين
-      </a>
+            </a>-->
+      <li>
+        <a routerLink="/inventory-list" routerLinkActive="active">
+          قائمة الجرد
+        </a>
+      </li>
+      <li>
+        <a routerLink="/balances" routerLinkActive="active">
+          الارصدة
+        </a>
+      </li>
+    </ul>
 
-      <a routerLink="/purchase-orders" routerLinkActive="active" (click)="closeMenu()">
+    <!-- زر الهامبرغر للموبايل -->
+    <button class="burger" type="button" (click)="toggleMenu()">
+      <span [class.open]="isMenuOpen"></span>
+      <span [class.open]="isMenuOpen"></span>
+      <span [class.open]="isMenuOpen"></span>
+    </button>
+  </div>
+
+  <!-- منيو الموبايل -->
+  <div class="mobile-menu" *ngIf="isMenuOpen">
+    <a routerLink="/items" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
+      الأصناف
+    </a>
+
+    <a routerLink="/categories" routerLinkActive="active" (click)="closeMenu()">
+      المجموعات
+    </a>
+
+    <a routerLink="/vendors" routerLinkActive="active" (click)="closeMenu()">
+      الموردين
+    </a>
+
+    <a routerLink="/purchase-orders" routerLinkActive="active" (click)="closeMenu()">
       طلبات الشراء
-   </a>
-   <a routerLink="/expenses" routerLinkActive="active" (click)="closeMenu()">
-    المصاريف
+    </a>
+    <a routerLink="/expenses" routerLinkActive="active" (click)="closeMenu()">
+      المصاريف
     </a>
     <a routerLink="/debts" routerLinkActive="active" (click)="closeMenu()">
       الديون
-     </a>
-     <a routerLink="/inventory" routerLinkActive="active" (click)="closeMenu()">
+    </a>
+    <!-- <a routerLink="/inventory" routerLinkActive="active" (click)="closeMenu()">
       الجرد
-      </a>
-      <a routerLink="/inventory-list" routerLinkActive="active" (click)="closeMenu()">
-        قائمة الجرد
-       </a>
-    </div>
-  </nav>
-  
-  
+      </a> -->
+    <a routerLink="/inventory-list" routerLinkActive="active" (click)="closeMenu()">
+      قائمة الجرد
+    </a>
+    <a routerLink="/balances" routerLinkActive="active" (click)="closeMenu()">
+      الارصدة
+    </a>
+  </div>
+</nav>

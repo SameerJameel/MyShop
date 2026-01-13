@@ -8,6 +8,7 @@ import { DebtsList } from './features/depts/debts-list/debts-list';
 import { ExpensesList } from './features/expenses/expenses-list/expenses-list';
 import { Inventory } from './features/inventory/inventory/inventory';
 import { InventoryListComponent } from './features/inventory/inventory-list/inventory-list';
+import { BalancesComponent } from './features/balances/balances/balances';
 //import { PurchaseOrderReceive } from './features/purchase-orders/purchase-order-receive/purchase-order-receive';
 export const routes: Routes = [
     { path: '', redirectTo: 'items', pathMatch: 'full' },
@@ -20,6 +21,7 @@ export const routes: Routes = [
     { path: 'debts', component: DebtsList },
     { path: 'expenses', component: ExpensesList },
     { path: 'inventory',component:Inventory },
+     { path: 'balances',component:BalancesComponent },
     { path: 'inventory-list',component:InventoryListComponent },
     {
         path: 'purchase-orders/:id/receive',
@@ -28,7 +30,7 @@ export const routes: Routes = [
             .then(m => m.PurchaseOrderEdit)
       },
       {
-        path: 'purchase-orders/:id',
+        path: 'purchase-orders/:id/edit',
         loadComponent: () =>
           import('./features/purchase-orders/purchase-order-edit/purchase-order-edit')
             .then(m => m.PurchaseOrderEdit)
@@ -38,6 +40,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/purchase-orders/purchase-order-edit/purchase-order-edit')
             .then(m => m.PurchaseOrderEdit)
+      }, 
+       {
+        path: 'purchase-orders/payment',
+        loadComponent: () =>
+          import('./features/purchase-orders/purchase-order-edit/purchase-order-edit')
+            .then(m => m.PurchaseOrderEdit)
       },
+      
     
 ];

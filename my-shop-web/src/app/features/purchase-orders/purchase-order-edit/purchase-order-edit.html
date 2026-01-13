@@ -2,24 +2,40 @@
 
   <div class="top">
     <div class="title">
-      <h1>{{ id ? 'تعديل طلبية شراء' : 'طلبية شراء جديدة' }}</h1>
+      <h1>
+        {{ isCreateMode ? 'طلبية شراء جديدة' : 
+           isEditMode ? 'تعديل طلبية شراء' : 
+           isReceiveMode ? 'استلام طلبية شراء' :
+           'دفع طلبية شراء' }}
+      </h1>
       <div class="sub">
-        <span class="status" [class.locked]="!canEdit()">
-          الحالة: {{ status === 'Draft' ? 'مسودة' : status === 'Sent' ? 'مرسلة' : status === 'Received' ? 'مستلمة' : status }}
+        <span class="status" [class.locked]="status === 2">
+          الحالة: {{ status === 0 ? 'مسودة' : status === 1 ? 'مرسلة' : status === 2 ? 'مستلمة' : status }}
         </span>
       </div>
     </div>
 
     <div class="top-actions">
       <button class="btn ghost" type="button" (click)="cancel()">رجوع</button>
-      <button class="btn primary" type="button" [disabled]="saving || !canEdit()" (click)="save()">
-        {{ saving ? 'جارِ الحفظ...' : 'حفظ' }}
+      
+      <button *ngIf="showSaveButton" 
+              class="btn primary" 
+              type="button" 
+              [disabled]="saving" 
+              (click)="save()">
+        {{ saveButtonText }}
       </button>
-   
-    <!--  -->
-    <button class="btn primary" type="button" (click)="submit()" [disabled]="saving || !canEdit()">تأكيد الاستلام</button>
+
+      <button *ngIf="showReceiveButton" 
+              class="btn primary" 
+              type="button" 
+              (click)="submit()" 
+              [disabled]="saving">
+        تأكيد الاستلام
+      </button>
+    </div>
   </div>
- </div>
+
   <div *ngIf="loading" class="state">جارِ التحميل...</div>
   <div *ngIf="error" class="state error">{{ error }}</div>
 
@@ -27,117 +43,174 @@
 
     <div class="panel">
       <div class="grid">
+        <!-- Vendor -->
         <div class="field">
-          <label>المورد</label>
-          <select formControlName="vendorId" [disabled]="!canEdit()">
+          <label>المورد <span class="required" *ngIf="isCreateMode || isPaymentMode">*</span></label>
+          <select formControlName="vendorId" [disabled]="isVendorDisabled">
             <option [ngValue]="null">اختر المورد</option>
             <option *ngFor="let v of vendors" [ngValue]="v.id">{{ v.name }}</option>
           </select>
-          <small *ngIf="form.get('vendorId')?.touched && form.get('vendorId')?.invalid">المورد مطلوب</small>
+          <small *ngIf="form.get('vendorId')?.touched && form.get('vendorId')?.invalid" class="error-msg">
+            المورد مطلوب
+          </small>
         </div>
 
+        <!-- Order Date -->
         <div class="field">
-          <label>التاريخ</label>
-          <input type="date" formControlName="orderDate" [disabled]="!canEdit()">
+          <label>التاريخ <span class="required" *ngIf="isCreateMode || isPaymentMode">*</span></label>
+          <input type="date" formControlName="orderDate" [disabled]="isOrderDateDisabled">
+          <small *ngIf="form.get('orderDate')?.touched && form.get('orderDate')?.invalid" class="error-msg">
+            التاريخ مطلوب
+          </small>
         </div>
 
-        <div class="field">
-          <label>خصم (اختياري)</label>
-          <input type="number" formControlName="discountAmount" [disabled]="!canEdit()">
+        <!-- Discount (visible only in Receive & Payment modes) -->
+        <div class="field" *ngIf="showDiscountAmount">
+          <label>خصم <span class="required" *ngIf="isReceiveMode || isPaymentMode">*</span></label>
+          <input type="number" formControlName="discountAmount">
+          <small *ngIf="form.get('discountAmount')?.touched && form.get('discountAmount')?.invalid" class="error-msg">
+            الخصم مطلوب
+          </small>
         </div>
 
-        <div class="field">
-          <label>دفعة/مدفوع (اختياري)</label>
-          <input type="number" formControlName="paidAmount" [disabled]="!canEdit()">
+        <!-- Paid Amount (visible only in Receive & Payment modes) -->
+        <div class="field" *ngIf="showPaidAmount">
+          <label>دفعة/مدفوع <span class="required" *ngIf="isReceiveMode || isPaymentMode">*</span></label>
+          <input type="number" formControlName="paidAmount">
+          <small *ngIf="form.get('paidAmount')?.touched && form.get('paidAmount')?.invalid" class="error-msg">
+            المبلغ المدفوع مطلوب
+          </small>
         </div>
       </div>
 
       <div class="field">
         <label>ملاحظات عامة</label>
-        <textarea rows="2" formControlName="notes" [disabled]="!canEdit()"></textarea>
+        <textarea rows="2" formControlName="notes"></textarea>
       </div>
     </div>
 
-    <!-- Lines -->
-    <div class="lines-head">
-      <h2>الأصناف في الطلبية</h2>
-      <button class="btn add" type="button" (click)="addLine()" [disabled]="!canEdit()">+ إضافة صنف</button>
-    </div>
-
-    <div class="lines" formArrayName="lines">
-      <div class="line-card"
-           *ngFor="let line of lines.controls; let i = index"
-           [formGroupName]="i">
-
-        <!-- Header (always visible) -->
-        <div class="line-header" (click)="toggleLine(i)">
-          <div class="h-left">
-            <div class="name">{{ line.value['name'] || 'صنف جديد' }}</div>
-            <div class="mini">
-              <span class="pill">الكمية: {{ line.value['orderedQuantity'] || 0 }}</span>
-              <span class="pill">الإجمالي: {{ lineTotal(line) | currency:'JOD' }}</span>
-            </div>
-          </div>
-          <div class="h-right">
-            <span class="chev">{{ line.value['expanded'] ? '▲' : '▼' }}</span>
-          </div>
-        </div>
-
-        <!-- Body -->
-        <div class="line-body" *ngIf="line.value['expanded']">
-
-          <div class="grid2">
-            <div class="field">
-              <label>الصنف</label>
-              <select formControlName="itemId" (change)="onItemChange(i)" [disabled]="!canEdit()">
-                <option [ngValue]="null">اختر الصنف</option>
-                <option *ngFor="let it of items" [ngValue]="it.id">{{ it.name }}</option>
-              </select>
-              <small *ngIf="line.get('itemId')?.touched && line.get('itemId')?.invalid">الصنف مطلوب</small>
-            </div>
-
-            <div class="field">
-              <label>الكمية</label>
-              <input type="number" formControlName="orderedQuantity" [disabled]="!canEdit()">
-              <small *ngIf="line.get('orderedQuantity')?.touched && line.get('orderedQuantity')?.invalid">الكمية مطلوبة</small>
-            </div>
-
-            <div class="field">
-              <label>سعر الشراء</label>
-              <input type="number" formControlName="purchasePrice" [disabled]="!canEdit()">
-              <small *ngIf="line.get('purchasePrice')?.touched && line.get('purchasePrice')?.invalid">سعر الشراء مطلوب</small>
-            </div>
-
-            <div class="field">
-              <label>سعر البيع</label>
-              <input type="number" formControlName="salePrice" [disabled]="!canEdit()">
-            </div>
-          </div>
-
-          <div class="total-row">
-            <div class="label">الإجمالي</div>
-            <div class="value">{{ lineTotal(line) | currency:'JOD' }}</div>
-          </div>
-
-          <div class="field">
-            <label>ملاحظات على السطر (اختياري)</label>
-            <textarea rows="2" formControlName="notes" [disabled]="!canEdit()"></textarea>
-          </div>
-
-          <div class="line-actions">
-            <button class="btn success" type="button" (click)="collapseLine(i)" [disabled]="!canEdit()">تم</button>
-            <button class="btn danger" type="button" (click)="removeLine(i)" [disabled]="!canEdit()">حذف</button>
-          </div>
-
-        </div>
+    <!-- Lines (hidden in Payment mode) -->
+    <div *ngIf="showLines">
+      <div class="lines-head">
+        <h2>الأصناف في الطلبية</h2>
       </div>
-    </div>
 
-    <!-- Summary -->
-    <div class="summary">
-      <div class="row">
-        <span>إجمالي الطلبية</span>
-        <strong>{{ totalAmount | currency:'JOD' }}</strong>
+      <div class="lines" formArrayName="lines">
+        <div class="line-card" *ngFor="let line of lines.controls; let i = index" [formGroupName]="i">
+
+          <!-- Header (always visible) -->
+          <div class="line-header" (click)="toggleLine(i)">
+            <div class="h-left">
+              <div class="name">{{ line.value['name'] || 'صنف جديد' }}</div>
+              <div class="mini">
+                <span class="pill">الكمية: {{ line.value['orderedQuantity'] || 0 }}</span>
+                <span class="pill">الإجمالي: {{ lineTotal(line) | currency:'JOD' }}</span>
+              </div>
+            </div>
+            <div class="h-right">
+              <span class="chev">{{ line.value['expanded'] ? '▲' : '▼' }}</span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="line-body" *ngIf="line.value['expanded']">
+
+            <div class="grid2">
+              <!-- Item -->
+              <div class="field">
+                <label>الصنف <span class="required">*</span></label>
+                <select formControlName="itemId" (change)="onItemChange(i)">
+                  <option [ngValue]="null">اختر الصنف</option>
+                  <option *ngFor="let it of items" [ngValue]="it.id">{{ it.name }}</option>
+                </select>
+                <small *ngIf="line.get('itemId')?.touched && line.get('itemId')?.invalid" class="error-msg">
+                  الصنف مطلوب
+                </small>
+              </div>
+              
+              <div class="field"></div>
+
+              <!-- Ordered Quantity -->
+              <div class="field">
+                <label>
+                  الكمية المطلوبة 
+                  <span class="required" *ngIf="isCreateMode || isEditMode">*</span>
+                </label>
+                
+                <input *ngIf="!isReceiveMode" 
+                       type="number" 
+                       formControlName="orderedQuantity">
+                
+                <div *ngIf="isReceiveMode" class="readonly-value">
+                  {{ line.value['orderedQuantity'] }}
+                </div>
+
+                <small *ngIf="line.get('orderedQuantity')?.touched && line.get('orderedQuantity')?.invalid" class="error-msg">
+                  الكمية مطلوبة
+                </small>
+              </div>
+
+              <!-- Received Quantity (visible only in Receive mode) -->
+              <div class="field" *ngIf="showReceivedQuantity">
+                <label>الكمية المستلمة <span class="required">*</span></label>
+                <input type="number" formControlName="receivedQuantity">
+                <small *ngIf="line.get('receivedQuantity')?.touched && line.get('receivedQuantity')?.invalid" class="error-msg">
+                  الكمية المستلمة مطلوبة
+                </small>
+              </div>
+
+              <!-- Purchase Price -->
+              <div class="field">
+                <label>
+                  سعر الشراء 
+                  <span class="required" *ngIf="isReceiveMode">*</span>
+                </label>
+                <input type="number" formControlName="purchasePrice">
+                <small *ngIf="line.get('purchasePrice')?.touched && line.get('purchasePrice')?.invalid" class="error-msg">
+                  سعر الشراء مطلوب
+                </small>
+              </div>
+
+              <!-- Sale Price -->
+              <div class="field">
+                <label>
+                  سعر البيع 
+                  <span class="required" *ngIf="isReceiveMode">*</span>
+                </label>
+                <input type="number" formControlName="salePrice">
+                <small *ngIf="line.get('salePrice')?.touched && line.get('salePrice')?.invalid" class="error-msg">
+                  سعر البيع مطلوب
+                </small>
+              </div>
+            </div>
+
+            <div class="total-row">
+              <div class="label">الإجمالي</div>
+              <div class="value">{{ lineTotal(line) | currency:'JOD' }}</div>
+            </div>
+
+            <div class="field">
+              <label>ملاحظات على السطر (اختياري)</label>
+              <textarea rows="2" formControlName="notes"></textarea>
+            </div>
+
+            <div class="line-actions">
+              <button class="btn success" type="button" (click)="collapseLine(i)">تم</button>
+              <button class="btn danger" type="button" (click)="removeLine(i)">حذف</button>
+            </div>
+
+          </div>
+        </div>
+        
+        <button class="btn add" type="button" (click)="addLine()">+ إضافة صنف</button>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary">
+        <div class="row">
+          <span>إجمالي الطلبية</span>
+          <strong>{{ totalAmount | currency:'JOD' }}</strong>
+        </div>
       </div>
     </div>
 

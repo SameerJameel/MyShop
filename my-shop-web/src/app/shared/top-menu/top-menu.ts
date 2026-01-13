@@ -4,12 +4,12 @@ import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-top-menu',
-  standalone: true, 
-  imports: [CommonModule, RouterModule], 
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './top-menu.html',
   styleUrls: ['./top-menu.scss']
 })
-export class TopMenu { 
+export class TopMenu {
 
 
   isMenuOpen = false;

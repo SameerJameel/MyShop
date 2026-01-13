@@ -8,8 +8,9 @@ export interface PurchaseOrderLine {
   item?: Item;
   unit?: string;
   orderedQuantity: number;
+  receivedQuantity:number | null;
   purchasePrice: number | null;
-  salePrice?: number | null;
+  salePrice?: number | null;  
   notes?: string | null;
 }
 
@@ -29,7 +30,7 @@ export interface PurchaseOrderDetails {
  // receivedDate: string; // ISO
   vendorId: number;
   vendorName?: string;
-  status: PurchaseOrderStatus;
+  status: number;
   discountAmount?: number | null;
   paidAmount?: number | null;
   notes?: string | null;
@@ -59,14 +60,13 @@ export interface PurchaseOrderHeader {
 }
 
 export interface PurchaseOrderReceiveLine {
+ lineId:number
   itemId: number;
   itemName: string;
-  orderedQty: number;
-
-  receivedQty: number;
+  orderedQuantity: number;
+  receivedQuantity: number;
   purchasePrice: number;
   salePrice: number;
-
   notes?: string;
 }
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MyShop.Api.Data;
 using MyShop.Api.DTOs;
 using MyShop.Api.Models;
+using MyShop.Api.Services;
 
 namespace MyShop.Api.Controllers;
 
@@ -11,10 +12,11 @@ namespace MyShop.Api.Controllers;
 public class PurchaseOrdersController : ControllerBase
 {
     private readonly AppDbContext _db;
-
-    public PurchaseOrdersController(AppDbContext db)
+    private readonly StockService _stock;
+    public PurchaseOrdersController(AppDbContext db, StockService stock)
     {
         _db = db;
+        _stock = stock;
     }
 
     // GET: api/purchaseorders
@@ -109,21 +111,23 @@ public class PurchaseOrdersController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id:int}/receive")]
-    public async Task<IActionResult> Receive(int id)
-    {
-        var po = await _db.PurchaseOrders.FindAsync(id);
-        if (po == null)
-            return NotFound();
+    //[HttpPost("{id:int}/receive")]
+    //public async Task<IActionResult> Receive(int id)
+    //{
+    //    var po = await _db.PurchaseOrders.FindAsync(id);
+    //    if (po == null)
+    //        return NotFound();
 
-        if (po.Status == PurchaseOrderStatus.Received)
-            return BadRequest("Order already received.");
+    //    if (po.Status == PurchaseOrderStatus.Received)
+    //        return BadRequest("Order already received.");
 
-        po.Status = PurchaseOrderStatus.Received;
-        await _db.SaveChangesAsync();
+    //    po.Status = PurchaseOrderStatus.Received;
+    //    po.ReceiveDate = System.DateTime.Now;
 
-        return NoContent();
-    }
+    //    await _db.SaveChangesAsync();
+
+    //    return NoContent();
+    //}
     /// <summary>
     /// جلب بيانات طلبية جاهزة لشاشة الاستلام
     /// GET: api/purchaseorders/{id}/receive
@@ -175,49 +179,90 @@ public class PurchaseOrdersController : ControllerBase
     /// استلام الطلبية وتثبيت الكميات والأسعار وحالة الطلبية
     /// POST: api/purchaseorders/{id}/receive
     /// </summary>
-    [HttpPost("{id}/receive")]
-    public async Task<IActionResult> Receive(int id, [FromBody] PurchaseOrderReceiveRequest request)
+    [HttpPost("{id:int}/receive")]
+    public async Task<IActionResult> Receive(int id, [FromBody] PurchaseOrderReceiveRequest request, CancellationToken ct)
     {
         var po = await _db.PurchaseOrders
             .Include(p => p.Lines)
                 .ThenInclude(l => l.Item)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
 
-        if (po == null)
-            return NotFound();
+        if (po == null) return NotFound();
+
+        // Transaction واحدة لكل العملية (رأس + أسطر + حركات)
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
         // تحديث بيانات الرأس
-        po.ReceiveDate = request.ReceiveDate;
+        po.ReceiveDate = DateTime.UtcNow;
         po.DiscountAmount = request.DiscountAmount;
         po.PaidAmount = request.PaidAmount;
         po.Notes = request.Notes;
         po.Status = PurchaseOrderStatus.Received;
 
-        // تحديث الأسطر
+        // تحديث الأسطر + تسجيل حركات المخزون على الفرق فقط
         foreach (var reqLine in request.Lines)
         {
             var line = po.Lines.FirstOrDefault(l => l.Id == reqLine.LineId);
             if (line == null) continue;
 
-            line.ReceivedQuantity = reqLine.ReceivedQuantity;
+            var oldReceived = line.ReceivedQuantity; // مهم
+            var newReceived = reqLine.ReceivedQuantity;
+
+            line.ReceivedQuantity = newReceived;
             line.PurchasePrice = reqLine.PurchasePrice;
             line.SalePrice = reqLine.SalePrice;
 
             // تحديث أسعار الصنف الافتراضية (اختياري)
             line.Item.DefaultPurchasePrice = reqLine.PurchasePrice;
             line.Item.DefaultSalePrice = reqLine.SalePrice;
+
+            // دلتا الكمية = فقط اللي لازم يدخل مخزون
+            var delta = newReceived - oldReceived;
+
+            if (delta == 0) continue;
+
+            if (delta > 0)
+            {
+                // استلام إضافي
+                await _stock.PostMovementAsync(new StockMovement
+                {
+                    ItemId = line.ItemId,
+                    Date = (DateTime.UtcNow),
+                    Type = StockMovementType.PurchaseReceipt,
+                    Qty = delta,
+                    UnitCost = line.PurchasePrice,
+                    PurchaseOrderId = po.Id,
+                    PurchaseOrderLineId = line.Id,
+                    Notes = $"PO Receive #{po.Id}"
+                }, ct);
+            }
+            else
+            {
+                // تعديل نزول في المستلم (إرجاع/تصحيح)
+                // خيار 1: اعتبره ReturnToVendor
+                await _stock.PostMovementAsync(new StockMovement
+                {
+                    ItemId = line.ItemId,
+                    Date = (DateTime.UtcNow),
+                    Type = StockMovementType.ReturnToVendor,
+                    Qty = delta, // delta سالب
+                    UnitCost = null, // غير مطلوب
+                    PurchaseOrderId = po.Id,
+                    PurchaseOrderLineId = line.Id,
+                    Notes = $"PO Receive correction/return #{po.Id}"
+                }, ct);
+            }
         }
 
         // إعادة احتساب إجمالي الطلبية بعد الاستلام والخصم
         po.TotalAmount = po.Lines.Sum(l => l.ReceivedQuantity * l.PurchasePrice) - po.DiscountAmount;
 
-        await _db.SaveChangesAsync();
-
-        // لو عندك جدول حركات مورد VendorTransactions
-        // تقدر تضيف سطر حركة هون (دين/دفعة) بناءً على PaidAmount و TotalAmount
+        await _db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return NoContent();
     }
+
 }
 
 

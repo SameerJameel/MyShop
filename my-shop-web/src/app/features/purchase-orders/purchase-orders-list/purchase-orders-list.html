@@ -12,6 +12,9 @@
     <button class="btn primary" (click)="newOrder()">
       طلبية جديدة
     </button>
+    <button class="btn primary" (click)="newPayment()">
+      دفعة جديدة
+    </button>
   </div>
 
   <!-- حالة تحميل / خطأ -->
@@ -65,6 +68,7 @@
       <span class="label">إجمالي المبالغ</span>
       <span class="value">{{ totalAmount | currency:'JOD':'symbol':'1.2-2' }}</span>
     </div>
+    
   </div>
 
   <!-- قائمة الطلبيات -->
@@ -111,6 +115,18 @@
             <span class="label">الإجمالي</span>
             <span class="value amount">
               {{ o.totalAmount | currency:'JOD':'symbol':'1.2-2' }}
+            </span>
+          </div>
+          <div class="info-item" *ngIf="o.totalAmount != null">
+            <span class="label">المدفوع</span>
+            <span class="value">
+              {{  o.paidAmount | currency:'JOD':'symbol':'1.2-2' }}
+            </span>
+          </div>
+          <div class="info-item" *ngIf="o.totalAmount != null">
+            <span class="label">الخصم</span>
+            <span class="value">
+              {{  o.discountAmount | currency:'JOD':'symbol':'1.2-2' }}
             </span>
           </div>
         </div>

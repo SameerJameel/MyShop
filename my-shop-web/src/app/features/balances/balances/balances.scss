@@ -1,0 +1,121 @@
+.balances-page {
+    padding: 16px;
+    font-family: system-ui, -apple-system, "Segoe UI", Arial;
+  
+    .card {
+      background: #fff;
+      border: 1px solid #e9e9e9;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+  
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+  
+      h2 { margin: 0; font-size: 20px; }
+      .sub { color: #666; font-size: 13px; margin-top: 4px; }
+    }
+  
+    .btn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #d7d7d7;
+      background: #f7f7f7;
+      cursor: pointer;
+  
+      &:disabled { opacity: .6; cursor: not-allowed; }
+    }
+  
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+  
+      .kpi {
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #f0f0f0;
+        .label { color: #666; font-size: 12px; }
+        .value { font-size: 18px; font-weight: 800; margin-top: 6px; }
+      }
+    }
+  
+    .filters {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+  
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+  
+        label { font-size: 12px; color: #666; }
+  
+        input, select {
+          height: 38px;
+          padding: 8px 10px;
+          border-radius: 10px;
+          border: 1px solid #ddd;
+          outline: none;
+        }
+      }
+  
+      .checkbox {
+        justify-content: center;
+        label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #333; }
+      }
+    }
+  
+    .state { padding: 12px; color: #555; }
+    .empty { color: #777; }
+  
+    .table {
+      padding: 10px;
+      overflow: auto;
+  
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 980px;
+      }
+  
+      th, td {
+        padding: 10px;
+        border-bottom: 1px solid #f2f2f2;
+        font-size: 13px;
+        text-align: right;
+        white-space: nowrap;
+      }
+  
+      th {
+        font-size: 12px;
+        color: #666;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+      }
+  
+      .name { font-weight: 700; }
+      .meta { font-size: 12px; color: #777; margin-top: 4px; }
+      .num { text-align: right; }
+      .strong { font-weight: 800; }
+    }
+  
+    @media (max-width: 900px) {
+      .kpis { grid-template-columns: 1fr 1fr; }
+      .filters { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: stretch; }
+    }
+  }
+  

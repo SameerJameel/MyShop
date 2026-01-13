@@ -22,6 +22,8 @@ export interface PurchaseOrderListItem {
   notes?: string | null;
   status?: number | null;
   totalAmount?: number;
+  paidAmount?: number;
+  discountAmount:number;
   isReceived?: boolean;
 
   // لو السيرفر برجع الأسطر:
@@ -93,6 +95,9 @@ export class PurchaseOrdersList implements OnInit {
             linesCount: o.linesCount ?? o.lines?.length ?? 0,
             notes: o.notes ?? '',
             status: o.status ?? '',
+            paidAmount:o.paidAmount,
+            discountAmount:o.discountAmount,
+            
             totalAmount: (o.lines ?? []).reduce(
               (sum: number, l: any) =>
                 sum + ((l.orderedQuantity ?? 0) * (l.purchasePrice ?? 0)),
@@ -200,8 +205,15 @@ export class PurchaseOrdersList implements OnInit {
     // لو مسمي صفحة الإضافة باسم مختلف عدّل المسار
   }
 
+    // إنشاء دفعة جديدة
+    newPayment(): void {
+      this.router.navigate(['/purchase-orders/payment']);
+      // لو مسمي صفحة الإضافة باسم مختلف عدّل المسار
+    }
+  
+
   editOrder(o: PurchaseOrderListItem): void {
-    this.router.navigate(['/purchase-orders', o.id]);
+    this.router.navigate(['/purchase-orders', o.id, 'edit']);
   }
 
   receiveOrder(o: PurchaseOrderListItem): void {

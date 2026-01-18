@@ -6,7 +6,14 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { VendorsService } from '../../../services/vendors.service';
 import { ItemsService } from '../../../services/items.service';
 import { PurchaseOrdersService } from '../../../services/purchase-orders.service';
-import { PurchaseOrderCreate, PurchaseOrderDetails, PurchaseOrderLine, PurchaseOrderUpdate } from '../../../models/purchase-order';
+import { 
+  PurchaseOrder,
+  PurchaseOrderCreate, 
+  PurchaseOrderLine, 
+  PurchaseOrderUpdate, 
+  PurchaseOrderPaymentRequest,
+  PurchaseOrderReceiveRequest
+} from '../../../models/purchase-order';
 
 enum PageMode {
   CREATE = 'create',
@@ -53,8 +60,8 @@ export class PurchaseOrderEdit {
   form = this.fb.group({
     vendorId: this.fb.control<number | null>(null),
     orderDate: this.fb.control<string>(this.toDateInput(new Date())),
-    discountAmount: this.fb.control<number | null>(null),
-    paidAmount: this.fb.control<number | null>(null),
+    discountAmount: this.fb.control<number | null>(0),
+    paidAmount: this.fb.control<number | null>(0),
     notes: this.fb.control<string>(''),
     lines: this.fb.array<FormGroup>([])
   });
@@ -219,7 +226,7 @@ export class PurchaseOrderEdit {
   // ---------- Load existing PO ----------
   private loadForEdit(id: number) {
     this.loading = true;
-    this.poService.getDetails(id).subscribe({
+    this.poService.getById(id).subscribe({
       next: (po) => {
         this.status = po.status;
         this.patchFromDetails(po);
@@ -233,12 +240,12 @@ export class PurchaseOrderEdit {
     });
   }
 
-  private patchFromDetails(po: PurchaseOrderDetails) {
+  private patchFromDetails(po: PurchaseOrder) {
     this.form.patchValue({
       vendorId: po.vendorId,
       orderDate: this.toDateInput(this.safeParseDate(po.orderDate)),
-      discountAmount: po.discountAmount ?? null,
-      paidAmount: po.paidAmount ?? null,
+      discountAmount: po.discountAmount ?? 0,
+      paidAmount: po.paidAmount ?? 0,
       notes: po.notes ?? ''
     });
 
@@ -264,9 +271,9 @@ export class PurchaseOrderEdit {
       itemId: [initial?.itemId ?? null],
       name: [initial?.item?.name ?? ''],
       orderedQuantity: [initial?.orderedQuantity ?? 1],
-      receivedQuantity: [initial?.receivedQuantity ?? null],
-      purchasePrice: [initial?.purchasePrice ?? null],
-      salePrice: [initial?.salePrice ?? null],
+      receivedQuantity: [initial?.receivedQuantity ?? 0],
+      purchasePrice: [initial?.purchasePrice ?? 0],
+      salePrice: [initial?.salePrice ?? 0],
       notes: [initial?.notes ?? ''],
       expanded: [expanded] // UI only
     });
@@ -338,8 +345,8 @@ export class PurchaseOrderEdit {
       itemId: x.itemId,
       name: x.name,
       orderedQuantity: Number(x.orderedQuantity),
-      receivedQuantity: Number(x.receivedQuantity),
-      purchasePrice: Number(x.purchasePrice),
+      receivedQuantity: Number(x.receivedQuantity || 0),
+      purchasePrice: Number(x.purchasePrice || 0),
       salePrice: x.salePrice === null || x.salePrice === '' ? null : Number(x.salePrice),
       notes: x.notes ?? null
     })) as PurchaseOrderLine[];
@@ -347,8 +354,8 @@ export class PurchaseOrderEdit {
     const payloadBase: PurchaseOrderCreate = {
       vendorId: raw.vendorId!,
       orderDate: this.toIsoFromDateInput(raw.orderDate!),
-      discountAmount: raw.discountAmount ?? null,
-      paidAmount: raw.paidAmount ?? null,
+      discountAmount: raw.discountAmount ?? 0,
+      paidAmount: raw.paidAmount ?? 0,
       notes: raw.notes ?? null,
       lines
     };
@@ -356,7 +363,7 @@ export class PurchaseOrderEdit {
     this.saving = true;
 
     if (this.isCreateMode) {
-      this.poService.createPO(payloadBase).subscribe({
+      this.poService.create(payloadBase).subscribe({
         next: (created) => {
           this.saving = false;
           this.router.navigate(['/purchase-orders']);
@@ -369,7 +376,7 @@ export class PurchaseOrderEdit {
       });
     } else {
       const payloadUpdate: PurchaseOrderUpdate = { ...payloadBase, id: this.id };
-      this.poService.updatePO(payloadUpdate).subscribe({
+      this.poService.updatePO(this.id, payloadUpdate).subscribe({
         next: () => {
           this.saving = false;
           this.router.navigate(['/purchase-orders']);
@@ -385,10 +392,15 @@ export class PurchaseOrderEdit {
 
   // ---------- Payment ----------
   savePayment() {
+    // if (!this.id) {
+    //   this.error = 'معرف الطلبية مطلوب للدفع.';
+    //   return;
+    // }
+
     const raw = this.form.getRawValue();
-    const payload = {
-      vendorId: raw.vendorId!,
-      orderDate: this.toIsoFromDateInput(raw.orderDate!),
+    const payload: PurchaseOrderPaymentRequest = {
+      vendorId: Number(raw.vendorId ?? 0),
+      orderDate:  this.toIsoFromDateInput(raw.orderDate!),
       discountAmount: Number(raw.discountAmount ?? 0),
       paidAmount: Number(raw.paidAmount ?? 0),
       notes: raw.notes ?? null
@@ -396,24 +408,17 @@ export class PurchaseOrderEdit {
 
     this.saving = true;
 
-    // Replace with actual payment service call
-    // this.poService.savePayment(payload).subscribe({
-    //   next: () => {
-    //     this.saving = false;
-    //     this.router.navigate(['/purchase-orders']);
-    //   },
-    //   error: (err) => {
-    //     console.error(err);
-    //     this.error = 'فشل حفظ الدفعة.';
-    //     this.saving = false;
-    //   }
-    // });
-
-    // Temporary mock
-    setTimeout(() => {
-      this.saving = false;
-      this.router.navigate(['/purchase-orders']);
-    }, 1000);
+    this.poService.savePayment(payload).subscribe({
+      next: () => {
+        this.saving = false;
+        this.router.navigate(['/purchase-orders']);
+      },
+      error: (err) => {
+        console.error(err);
+        this.error = 'فشل حفظ الدفعة.';
+        this.saving = false;
+      }
+    });
   }
 
   // ---------- Receive ----------
@@ -426,7 +431,7 @@ export class PurchaseOrderEdit {
       return;
     }
 
-    const payload = {
+    const payload: PurchaseOrderReceiveRequest = {
       poId: this.id,
       discountAmount: Number(this.form.value.discountAmount ?? 0),
       paidAmount: Number(this.form.value.paidAmount ?? 0),

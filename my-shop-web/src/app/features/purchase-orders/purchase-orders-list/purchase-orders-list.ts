@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 
 import { PurchaseOrdersService } from '../../../services/purchase-orders.service';
 import { Item } from '../../../models/item';
+import { PurchaseOrderStatus } from '../../../models/purchase-order';
 
 export type PeriodFilter = 'day' | 'week' | 'month' | 'year' | 'all';
 
@@ -21,8 +22,8 @@ export interface PurchaseOrderListItem {
   linesCount: number;
   notes?: string | null;
   status?: number | null;
-  totalAmount?: number;
-  paidAmount?: number;
+  totalAmount: number;
+  paidAmount: number;
   discountAmount:number;
   isReceived?: boolean;
 
@@ -63,11 +64,14 @@ export class PurchaseOrdersList implements OnInit {
 
   // ملخص
   get totalOrders(): number {
-    return this.filteredOrders.length;
+    return this.filteredOrders.filter(x => x.status != PurchaseOrderStatus.Payment).length;
+  }
+  get totalPayments(): number {
+    return this.filteredOrders.filter(x => x.status == PurchaseOrderStatus.Payment).length;
   }
 
-  get totalLines(): number {
-    return this.filteredOrders.reduce((sum, o) => sum + (o.linesCount || 0), 0);
+  get restTotal(): number {
+    return this.filteredOrders.reduce((sum, o) => sum + (o.totalAmount - o.discountAmount - o.paidAmount || 0), 0);
   }
 
   get totalAmount(): number {

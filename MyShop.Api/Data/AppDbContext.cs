@@ -37,12 +37,12 @@ public class AppDbContext : DbContext
             .WithMany(v => v.ItemVendors)
             .HasForeignKey(iv => iv.VendorId);
 
-        // Category self reference
-        modelBuilder.Entity<Category>()
-            .HasOne(c => c.Parent)
-            .WithMany(c => c.Children)
-            .HasForeignKey(c => c.ParentId)
-            .OnDelete(DeleteBehavior.Restrict);
+        //// Category self reference
+        //modelBuilder.Entity<Category>()
+        //    .HasOne(c => c.Parent)
+        //    .WithMany(c => c.Children)
+        //    .HasForeignKey(c => c.ParentId)
+        //    .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<PurchaseOrder>()
             .HasMany(p => p.Lines)

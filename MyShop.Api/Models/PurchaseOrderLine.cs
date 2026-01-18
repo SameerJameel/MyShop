@@ -17,16 +17,16 @@ public class PurchaseOrderLine
     public Item Item { get; set; } = null!;
 
     // الكمية المطلوبة بالطلب
-    public decimal OrderedQuantity { get; set; }
+    public decimal OrderedQuantity { get; set; } = 0m;
 
     // الكمية المستلمة فعليًا
-    public decimal ReceivedQuantity { get; set; }
+    public decimal ReceivedQuantity { get; set; } = 0m;
 
     // سعر الشراء النهائي للوحدة
-    public decimal PurchasePrice { get; set; }
+    public decimal? PurchasePrice { get; set; } = 0m;
 
     // سعر البيع الافتراضي لهذا الصنف (وقت الاستلام)
-    public decimal SalePrice { get; set; }
+    public decimal? SalePrice { get; set; } = 0m;
     public string? Notes { get; set; }
 }
 

@@ -5,7 +5,9 @@
   margin: 0 auto;
   padding: 1rem 1.25rem 2rem;
   box-sizing: border-box;
-}.filters-row {
+}
+
+.filters-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -16,18 +18,21 @@
 .filters-row label {
   color: #374151;
 }
+
 .filters-row input[type="text"] {
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #d1d5db;
-  width:calc(100% - 18px);
+  width: calc(100% - 18px);
 }
+
 .select-items {
   width: 100%;
   border-radius: 8px;
   border: 1px solid #d1d5db;
   font-size: 0.85rem;
   padding: 8px 10px;
+  margin-bottom: 1rem;
 }
 
 .select-items:focus {
@@ -36,7 +41,166 @@
   box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.25);
 }
 
+/* ===== نظام التابات ===== */
 
+.view-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+}
+
+.tab-btn span {
+  font-size: 1rem;
+}
+
+.tab-btn:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.tab-btn.active {
+  background: #16a34a;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ===== عرض الكروت ===== */
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.item-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  padding: 1rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.item-card:hover {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
+.item-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.item-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.item-card-id {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.item-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.item-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.info-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.info-value {
+  color: #111827;
+  font-weight: 600;
+}
+
+.info-value.price {
+  color: #16a34a;
+  font-size: 0.9rem;
+}
+
+.info-value.price.highlight {
+  background: #dcfce7;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  color: #166534;
+}
+
+.item-card-footer {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.btn-card {
+  flex: 1;
+  background: #f3f4f6;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.btn-card:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.btn-card-danger {
+  color: #dc2626;
+}
+
+.btn-card-danger:hover {
+  background: #fee2e2;
+}
 
 /* ===== الهيدر ===== */
 
@@ -104,7 +268,7 @@
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px; // عشان ما يتكسر كثير في الشاشات الصغيرة
+  min-width: 800px;
   font-size: 0.85rem;
 }
 
@@ -369,8 +533,7 @@
     max-width: 100%;
     max-height: calc(100vh - 1.5rem);
   }
-}
-@media (max-width: 768px) {
+
   .filters-row {
     flex-direction: column;
     align-items: flex-start;
@@ -378,5 +541,31 @@
 
   .filters-row select {
     width: 100%;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .view-tabs {
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

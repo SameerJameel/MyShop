@@ -4,33 +4,35 @@ import { ItemsService } from '../../../services/items.service';
 import { Item } from '../../../models/item';
 import { Category } from '../../../models/category';
 import { CategoriesService } from '../../../services/categories.service';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup,Validators } from '@angular/forms';
-
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-items-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule,FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './items-list.html',
   styleUrl: './items-list.scss',
 })
-export class ItemsList implements OnInit{
+export class ItemsList implements OnInit {
   private categoriesService = inject(CategoriesService);
-
-  categories: Category[] = [];
-
   private itemsService = inject(ItemsService);
   private fb = inject(FormBuilder);
 
+  categories: Category[] = [];
   items: Item[] = [];
   filteredItems: Item[] = [];
   loading = false;
   error: string | null = null;
   search = '';
+  
+  // نظام التابات
+  viewMode: 'table' | 'cards' = 'table';
+
   // popup form
   form!: FormGroup;
   isFormOpen = false;
   isEditMode = false;
+  selectedCategoryId: number = 0;
 
   ngOnInit(): void {
     this.buildForm();
@@ -51,6 +53,7 @@ export class ItemsList implements OnInit{
       isProduced: [false]
     });
   }
+
   loadCategories(): void {
     this.categoriesService.getAll().subscribe({
       next: res => {
@@ -58,11 +61,9 @@ export class ItemsList implements OnInit{
       },
       error: err => {
         console.error(err);
-        // مش ضرورة نعرّض Error للمستخدم هون
       }
     });
   }
-  
 
   loadItems(): void {
     this.loading = true;
@@ -82,7 +83,6 @@ export class ItemsList implements OnInit{
     });
   }
 
-  // فتح الفورم للإضافة
   openAddForm(): void {
     this.isEditMode = false;
     this.form.reset({
@@ -99,7 +99,6 @@ export class ItemsList implements OnInit{
     this.isFormOpen = true;
   }
 
-  // فتح الفورم للتعديل
   openEditForm(item: Item): void {
     this.isEditMode = true;
     this.form.patchValue({
@@ -141,7 +140,6 @@ export class ItemsList implements OnInit{
         }
       });
     } else {
-      // إزالة الـ id لو 0 عشان الـ API يولّده
       const newItem: Item = { ...value, id: 0 };
       this.itemsService.create(newItem).subscribe({
         next: () => {
@@ -168,41 +166,30 @@ export class ItemsList implements OnInit{
     });
   }
 
-  // helpers للـ template
+  applyFilter(): void {
+    let arr = [...this.items];
+
+    if (this.selectedCategoryId && this.selectedCategoryId !== 0) {
+      arr = arr.filter(i => i.categoryId === this.selectedCategoryId);
+    }
+
+    if (this.search && this.search.trim()) {
+      const q = this.search.trim().toLowerCase();
+      arr = arr.filter(i =>
+        (i.name || '').toLowerCase().includes(q) ||
+        (i.unit || '').toLowerCase().includes(q)
+      );
+    }
+
+    this.filteredItems = arr;
+  }
+
+  // تبديل وضع العرض
+  switchView(mode: 'table' | 'cards'): void {
+    this.viewMode = mode;
+  }
+
   get f() {
     return this.form.controls;
   }
-
-  selectedCategoryId: number = 0;
-
-// مصفوفة الأصناف بعد الفلترة
-// get filteredItems() {
-//   if (!this.items) {
-//     return [];
-//   }
-
-//   if (!this.selectedCategoryId || this.selectedCategoryId === 0) {
-//     return this.items;
-//   }
-
-//   return this.items.filter(i => i.categoryId === this.selectedCategoryId);
-// }
-applyFilter(): void {
-  let arr = [...this.items];
-
-  if (this.selectedCategoryId && this.selectedCategoryId !== 0) {
-    arr = arr.filter(i => i.categoryId === this.selectedCategoryId);
-  }
-
-  if (this.search && this.search.trim()) {
-    const q = this.search.trim().toLowerCase();
-    arr = arr.filter(i =>
-      (i.name || '').toLowerCase().includes(q) ||
-      (i.unit || '').toLowerCase().includes(q)
-    );
-  }
-
-  this.filteredItems = arr;
-}
-
 }

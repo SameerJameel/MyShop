@@ -131,7 +131,7 @@
               <div class="field"></div>
 
               <!-- Ordered Quantity -->
-              <div class="field">
+              <div class="field" *ngIf="!isReceiveMode">
                 <label>
                   الكمية المطلوبة 
                   <span class="required" *ngIf="isCreateMode || isEditMode">*</span>
@@ -160,7 +160,7 @@
               </div>
 
               <!-- Purchase Price -->
-              <div class="field">
+              <div class="field" *ngIf="isReceiveMode">
                 <label>
                   سعر الشراء 
                   <span class="required" *ngIf="isReceiveMode">*</span>
@@ -172,7 +172,7 @@
               </div>
 
               <!-- Sale Price -->
-              <div class="field">
+              <div class="field" *ngIf="isReceiveMode">
                 <label>
                   سعر البيع 
                   <span class="required" *ngIf="isReceiveMode">*</span>
@@ -184,7 +184,7 @@
               </div>
             </div>
 
-            <div class="total-row">
+            <div class="total-row" *ngIf="isReceiveMode">
               <div class="label">الإجمالي</div>
               <div class="value">{{ lineTotal(line) | currency:'JOD' }}</div>
             </div>
@@ -206,7 +206,7 @@
       </div>
 
       <!-- Summary -->
-      <div class="summary">
+      <div class="summary" *ngIf="isReceiveMode">
         <div class="row">
           <span>إجمالي الطلبية</span>
           <strong>{{ totalAmount | currency:'JOD' }}</strong>

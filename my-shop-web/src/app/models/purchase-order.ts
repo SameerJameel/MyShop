@@ -1,66 +1,90 @@
-import { Item } from "./item";
+export interface PurchaseOrder {
+  id: number;
+  vendorId: number;
+  vendor?: Vendor;
+  orderDate: string;
+  receiveDate?: string | null;
+  status: PurchaseOrderStatus;
+  totalAmount: number;
+  discountAmount: number;
+  paidAmount: number;
+  notes?: string | null;
+  lines: PurchaseOrderLine[];
+}
 
-export type PurchaseOrderStatus = 'Draft' | 'Sent' | 'Received' | 'Cancelled';
 
+// Purchase Order Status Enum
+export enum PurchaseOrderStatus {
+  Draft = 0,
+  Sent = 1,
+  Received = 2,
+  Cancelled = 3,
+  Payment = 4,
+
+}
+
+// Item interface
+export interface Item {
+  id: number;
+  name: string;
+  unit: string;
+  defaultPurchasePrice: number;
+  defaultSalePrice: number;
+}
+
+// Vendor interface
+export interface Vendor {
+  id: number;
+  name: string;
+}
+
+// Purchase Order Line
 export interface PurchaseOrderLine {
-  id?: number;              // موجودة عند التعديل
-  itemId: number | null;
+  id?: number;
+  purchaseOrderId?: number;
+  itemId: number;
   item?: Item;
-  unit?: string;
+  name?: string;
   orderedQuantity: number;
-  receivedQuantity:number | null;
-  purchasePrice: number | null;
-  salePrice?: number | null;  
+  receivedQuantity: number;
+  purchasePrice: number;
+  salePrice: number | null;
   notes?: string | null;
 }
 
-export interface PurchaseOrderListItem {
-  id: number;
-  date: string;             // ISO string
-  vendorId: number;
-  vendorName: string;
-  status: PurchaseOrderStatus;
-  itemsCount: number;
-  totalAmount: number;
-}
-
+// Purchase Order Details
 export interface PurchaseOrderDetails {
   id: number;
-  orderDate: string;
- // receivedDate: string; // ISO
   vendorId: number;
-  vendorName?: string;
-  status: number;
-  discountAmount?: number | null;
-  paidAmount?: number | null;
-  notes?: string | null;
-  lines: PurchaseOrderLine[];
+  vendor?: Vendor;
+  orderDate: string;
+  receiveDate?: string | null;
+  status: PurchaseOrderStatus;
   totalAmount: number;
+  discountAmount: number;
+  paidAmount: number;
+  notes?: string | null;
+  lines: PurchaseOrderLine[];
 }
 
+// Create Purchase Order DTO
 export interface PurchaseOrderCreate {
-  vendorId: number | null;
-  orderDate: string; // ISO
- // receivedDate: string; // ISO
+  vendorId: number;
+  orderDate: string;
   discountAmount?: number | null;
   paidAmount?: number | null;
   notes?: string | null;
   lines: PurchaseOrderLine[];
 }
 
+// Update Purchase Order DTO
 export interface PurchaseOrderUpdate extends PurchaseOrderCreate {
   id: number;
 }
 
-export interface PurchaseOrderHeader {
-  id: number;
-  vendorName: string;
-  orderDate: string;
-  notes?: string;
-}
-
-export interface PurchaseOrderReceiveLine {
- lineId:number
+// Receive Request Line
+export interface PurchaseOrderReceiveRequestLine {
+  lineId: number;
   itemId: number;
   itemName: string;
   orderedQuantity: number;
@@ -70,10 +94,58 @@ export interface PurchaseOrderReceiveLine {
   notes?: string;
 }
 
-export interface PurchaseOrderReceiveDto {
+// Receive Request
+export interface PurchaseOrderReceiveRequest {
   poId: number;
-  //receivedDate: string;
-  discount?: number;
-  paidAmount?: number;
-  lines: PurchaseOrderReceiveLine[];
+  discountAmount: number;
+  paidAmount: number;
+  lines: PurchaseOrderReceiveRequestLine[];
+}
+
+// Payment Request
+export interface PurchaseOrderPaymentRequest {
+  paymentId?:number;
+  vendorId: number;
+  orderDate: string;
+  discountAmount?: number;
+  paidAmount: number;
+  notes?: string | null;
+}
+
+// Payment Response (for GET /payment endpoint)
+export interface PurchaseOrderPaymentInfo {
+  id: number;
+  vendorId: number;
+  vendorName: string;
+  orderDate: string;
+  totalAmount: number;
+  discountAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  status: string;
+  notes?: string | null;
+}
+
+// Receive VM (for GET /receive endpoint)
+export interface PurchaseOrderReceiveVm {
+  id: number;
+  orderNumber: string;
+  orderDate: string;
+  vendorName: string;
+  status: string;
+  discountAmount: number;
+  paidAmount: number;
+  notes?: string | null;
+  lines: PurchaseOrderReceiveLineVm[];
+}
+
+export interface PurchaseOrderReceiveLineVm {
+  lineId: number;
+  itemId: number;
+  itemName: string;
+  unit: string;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  purchasePrice: number;
+  salePrice: number;
 }

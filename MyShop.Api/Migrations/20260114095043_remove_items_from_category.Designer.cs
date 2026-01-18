@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyShop.Api.Data;
 
@@ -10,9 +11,11 @@ using MyShop.Api.Data;
 namespace MyShop.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260114095043_remove_items_from_category")]
+    partial class remove_items_from_category
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -248,7 +251,7 @@ namespace MyShop.Api.Migrations
                     b.Property<DateTime?>("CostUpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal?>("DefaultPurchasePrice")
+                    b.Property<decimal>("DefaultPurchasePrice")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("DefaultSalePrice")
@@ -314,7 +317,7 @@ namespace MyShop.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal?>("DiscountAmount")
+                    b.Property<decimal>("DiscountAmount")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
@@ -323,7 +326,7 @@ namespace MyShop.Api.Migrations
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal?>("PaidAmount")
+                    b.Property<decimal>("PaidAmount")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ReceiveDate")
@@ -332,7 +335,7 @@ namespace MyShop.Api.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal?>("TotalAmount")
+                    b.Property<decimal>("TotalAmount")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("VendorId")
@@ -363,13 +366,13 @@ namespace MyShop.Api.Migrations
                     b.Property<int>("PurchaseOrderId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal?>("PurchasePrice")
+                    b.Property<decimal>("PurchasePrice")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("ReceivedQuantity")
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal?>("SalePrice")
+                    b.Property<decimal>("SalePrice")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

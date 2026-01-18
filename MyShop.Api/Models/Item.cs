@@ -15,11 +15,11 @@ namespace MyShop.Api.Models
 
         public int CategoryId { get; set; }
 
-        [JsonIgnore]
+        
         [ValidateNever]
         public Category? Category { get; set; } 
 
-        public decimal DefaultPurchasePrice { get; set; }
+        public decimal? DefaultPurchasePrice { get; set; }
         public decimal DefaultSalePrice { get; set; }
         public decimal ReorderLevel { get; set; }
 

@@ -1,1 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'primeicons/primeicons.css';
+
+body {
+  direction: rtl;
+  margin: 0;
+}
+.p-dialog-content {
+  display: block !important;
+}

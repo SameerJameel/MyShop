@@ -1,21 +1,29 @@
 <div class="po-page" dir="rtl">
-
+  
   <!-- الهيدر -->
-  <div class="page-header">
-    <div class="titles">
-      <h1>طلبات الشراء</h1>
-      <p class="subtitle">
-        إدارة طلبات شراء البضاعة من الموردين.
-      </p>
+<p-toolbar class="mb-3">
+  <div class="p-toolbar-group-left">
+    <div>
+      <h2 class="m-0">طلبات ودفعات الشراء</h2>
+      <small class="text-muted">
+        إدارة الدفعات و طلبات شراء البضاعة من الموردين
+      </small>
     </div>
-
-    <button class="btn primary" (click)="newOrder()">
-      طلبية جديدة
-    </button>
-    <button class="btn primary" (click)="newPayment()">
-      دفعة جديدة
-    </button>
   </div>
+
+  <div class="p-toolbar-group-right">
+
+<p-speedDial
+  [model]="addActions"
+  direction="up"
+  showIcon="pi pi-plus"
+  className="po-speed-dial show-labels">
+</p-speedDial>
+  </div>
+</p-toolbar>
+
+  
+ 
 
   <!-- حالة تحميل / خطأ -->
   <div *ngIf="loading" class="state-msg">
@@ -26,6 +34,7 @@
   </div>
 
   <!-- الفلاتر -->
+   
   <div class="filters" *ngIf="!loading">
     <div class="filter-group">
       <label>الفترة</label>
@@ -66,7 +75,7 @@
     </div>
     <div class="summary-card">
       <span class="label">المتبقي من الحساب</span>
-      <span class="value">{{ restTotal }}</span>
+      <span class="value">{{ restTotal | currency:'JOD':'symbol':'1.2-2' }}</span>
     </div>
     <div class="summary-card">
       <span class="label">إجمالي المبالغ</span>
@@ -143,18 +152,9 @@
 
       <!-- الأكشنات -->
       <div class="order-actions">
-        <button class="link-btn" (click)="editOrder(o)">
-          تعديل
-        </button>
-
-        <button class="link-btn danger" (click)="deleteOrder(o)">
-          حذف
-        </button>
-
-        <button class="link-btn whatsapp" (click)="sendWhatsApp(o)">
-          واتساب
-        </button>
-
+        <p-button icon="pi pi-pencil" text (onClick)="editOrder(o)" />
+        <p-button icon="pi pi-trash" text severity="danger" (onClick)="deleteOrder(o)" />
+        <p-button icon="pi pi-whatsapp" text (onClick)="sendWhatsApp(o)" />
         <button class="link-btn success"
                 (click)="receiveOrder(o)"
                 [disabled]="isReceived(o)">

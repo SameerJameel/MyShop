@@ -2,10 +2,15 @@ import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-
+import { MessageService } from 'primeng/api';
+import { DialogService, DynamicDialogModule, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ToastModule } from 'primeng/toast';
+import { ButtonModule } from 'primeng/button';
 import { VendorsService } from '../../../services/vendors.service';
 import { ItemsService } from '../../../services/items.service';
 import { PurchaseOrdersService } from '../../../services/purchase-orders.service';
+import { Footer } from '../../../shared/footer';
+import { ProductListDemo } from '../../../shared/productlistdemo';
 import { 
   PurchaseOrder,
   PurchaseOrderCreate, 
@@ -30,14 +35,15 @@ enum PageMode {
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    CurrencyPipe
+    CurrencyPipe,ToastModule,ButtonModule,DynamicDialogModule
   ],
-  providers: [DatePipe],
+  providers: [DatePipe,DialogService, MessageService],
   templateUrl: './purchase-order-edit.html',
   styleUrls: ['./purchase-order-edit.scss']
 })
 export class PurchaseOrderEdit {
-
+constructor(public dialogService: DialogService, public messageService: MessageService) {}
+  ref: DynamicDialogRef | undefined | null;
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -489,4 +495,90 @@ export class PurchaseOrderEdit {
     const [y, m, d] = v.split('-').map(n => +n);
     return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)).toISOString();
   }
+ 
+   show() {
+    this.ref = this.dialogService.open(ProductListDemo, {
+        header: 'اختيار المنتجات',
+        width: '90%',
+        modal: true,
+        contentStyle: { overflow: 'auto' },
+        breakpoints: {
+            '960px': '95vw',
+            '640px': '100vw'
+        },
+        data: {
+            items: this.items, // Your items array
+            multiSelect: true, // Enable multi-selection
+            showCategory: true, // Show category field
+            showQuantity: true, // Show quantity field
+            showPrice: true, // Show price field
+            showDescription: false, // Hide description
+            imageBaseUrl: 'https://primefaces.org/cdn/primeng/images/demo/product/', // Base URL for images
+            fieldMapping: {
+                id: 'id',
+                name: 'name',
+                code: 'code',
+                category: 'category',
+                quantity: 'quantity',
+                price: 'purchasePrice', // or 'salePrice'
+                image: 'image',
+                description: 'description'
+            }
+        },
+        templates: {
+            footer: Footer
+        }
+    });
+
+    if (this.ref && this.ref.onClose) {
+        this.ref.onClose.subscribe((selectedItems: any) => {
+            if (selectedItems) {
+                if (Array.isArray(selectedItems)) {
+                    // Multi-select: Add all selected items as lines
+                    selectedItems.forEach(item => {
+                        this.addLineFromItem(item);
+                    });
+                    this.messageService.add({ 
+                        severity: 'success', 
+                        summary: 'تم الإضافة', 
+                        detail: `تم إضافة ${selectedItems.length} منتج`, 
+                        life: 3000 
+                    });
+                } else {
+                    // Single select: Add one item
+                    this.addLineFromItem(selectedItems);
+                    this.messageService.add({ 
+                        severity: 'success', 
+                        summary: 'تم الإضافة', 
+                        detail: `تم إضافة ${selectedItems.name}`, 
+                        life: 3000 
+                    });
+                }
+            } else {
+                this.messageService.add({ 
+                    severity: 'info', 
+                    summary: 'لم يتم الاختيار', 
+                    detail: 'تم إلغاء العملية', 
+                    life: 3000 
+                });
+            }
+        });
+    }
+}
+// Helper method to add line from selected item
+private addLineFromItem(item: any) {
+    const newLine = this.fb.group({
+        id: [null],
+        itemId: [item.id],
+        name: [item.name],
+        orderedQuantity: [1],
+        receivedQuantity: [0],
+        purchasePrice: [item.purchasePrice ?? 0],
+        salePrice: [item.salePrice ?? 0],
+        notes: [''],
+        expanded: [true]
+    });
+    this.lines.push(newLine);
+    this.updateLineValidation(this.lines.length - 1);
+}
 }

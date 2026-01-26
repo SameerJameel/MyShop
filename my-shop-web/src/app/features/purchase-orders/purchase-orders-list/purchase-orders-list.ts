@@ -2,10 +2,24 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe} from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-
+import { ToolbarModule } from 'primeng/toolbar';
+import { ButtonModule } from 'primeng/button';
+import { SplitButtonModule } from 'primeng/splitbutton';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { MessageModule } from 'primeng/message';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { DividerModule } from 'primeng/divider';
+import { DataViewModule } from 'primeng/dataview';
+import { TableModule } from 'primeng/table';
 import { PurchaseOrdersService } from '../../../services/purchase-orders.service';
 import { Item } from '../../../models/item';
 import { PurchaseOrderStatus } from '../../../models/purchase-order';
+import { ViewChild } from '@angular/core';
+import { SplitButton } from 'primeng/splitbutton';
+import { SpeedDialModule } from 'primeng/speeddial';
 
 export type PeriodFilter = 'day' | 'week' | 'month' | 'year' | 'all';
 
@@ -37,19 +51,48 @@ export interface PurchaseOrderListItem {
   imports: [
     CommonModule,
     FormsModule,
-    RouterModule,
-    DatePipe,
-    CurrencyPipe
+    ToolbarModule,
+    ButtonModule,
+    SplitButtonModule,
+    InputTextModule,
+    SelectButtonModule,
+    CardModule,
+    TagModule,
+    DividerModule,
+    DataViewModule,
+    TableModule,
+    MessageModule,
+    ProgressSpinnerModule,SpeedDialModule
   ],
   providers: [DatePipe],
   templateUrl: './purchase-orders-list.html',
   styleUrls: ['./purchase-orders-list.scss']
 })
+
+
 export class PurchaseOrdersList implements OnInit {
 
   private poService = inject(PurchaseOrdersService);
   private router = inject(Router);
   private datePipe = inject(DatePipe);
+    
+  
+  addActions = [
+  {
+    label: 'طلبية شراء جديدة',
+    icon: 'pi pi-file',
+    command: () => this.newOrder()
+  },
+  {
+    label: 'دفعة جديدة',
+    icon: 'pi pi-wallet',
+    command: () => this.newPayment()
+  }
+];
+
+layout: 'list' | 'grid' = 'list';
+
+layoutOptions = ['list', 'grid'];
 
   loading = false;
   error: string | null = null;
@@ -61,6 +104,38 @@ export class PurchaseOrdersList implements OnInit {
   filterPeriod: PeriodFilter = 'month';
   filterBaseDate: string = new Date().toISOString().substring(0, 10);
   filterVendor: string = '';
+
+
+
+  viewMode: 'cards' | 'table' = 'cards';
+expandedId: number | null = null;
+addMenuOpen = false;
+filtersExpanded = false;
+recordType: 'all' | 'orders' | 'payments' = 'all';
+
+setView(v: 'cards' | 'table') {
+  this.viewMode = v;
+  this.expandedId = null;
+}
+
+toggleExpand(o: any) {
+  this.expandedId = this.expandedId === o.id ? null : o.id;
+}
+
+getRemaining(o: any): number {
+  return (o.totalAmount || 0) - (o.discountAmount || 0) - (o.paidAmount || 0);
+}
+
+getRemainingClass(o: any): string {
+  const r = this.getRemaining(o);
+  if (r <= 0) return 'green';
+  if (r < o.totalAmount) return 'orange';
+  return 'red';
+}
+
+getStatusClass(o: any): string {
+  return ['draft','sent','received','cancelled','payment'][o.status ?? 0];
+}
 
   // ملخص
   get totalOrders(): number {
@@ -277,4 +352,8 @@ export class PurchaseOrdersList implements OnInit {
   isReceived(o: PurchaseOrderListItem): boolean {
     return !!o.isReceived || o.status ==2;
   }
+
+
+
+  
 }

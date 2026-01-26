@@ -5,11 +5,20 @@ import { Item } from '../../../models/item';
 import { Category } from '../../../models/category';
 import { CategoriesService } from '../../../services/categories.service';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { ToolbarModule } from 'primeng/toolbar';
+import { InputTextModule } from 'primeng/inputtext';
+import { TabsModule } from 'primeng/tabs';
+import { AutoCompleteModule,AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import {DialogModule} from 'primeng/dialog';
+import {TagModule} from 'primeng/tag';
+import {DataViewModule} from 'primeng/dataview';
+import {SelectButtonModule} from 'primeng/selectbutton';
 @Component({
   selector: 'app-items-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [DialogModule,CommonModule, ReactiveFormsModule, FormsModule,ButtonModule,TableModule,ToolbarModule,InputTextModule,TabsModule,AutoCompleteModule,TagModule,DataViewModule,SelectButtonModule],
   templateUrl: './items-list.html',
   styleUrl: './items-list.scss',
 })
@@ -17,19 +26,24 @@ export class ItemsList implements OnInit {
   private categoriesService = inject(CategoriesService);
   private itemsService = inject(ItemsService);
   private fb = inject(FormBuilder);
-
   categories: Category[] = [];
   items: Item[] = [];
   filteredItems: Item[] = [];
   loading = false;
   error: string | null = null;
   search = '';
-  
+  layout: 'list' | 'grid' = 'list';
+
+options = [
+  { label: 'List', value: 'list' },
+  { label: 'Grid', value: 'grid' }
+];
   // نظام التابات
   viewMode: 'table' | 'cards' = 'table';
 
   // popup form
   form!: FormGroup;
+  isDialogOpen = false;
   isFormOpen = false;
   isEditMode = false;
   selectedCategoryId: number = 0;
@@ -96,7 +110,7 @@ export class ItemsList implements OnInit {
       isService: false,
       isProduced: false
     });
-    this.isFormOpen = true;
+    this.isDialogOpen = true;
   }
 
   openEditForm(item: Item): void {
@@ -112,7 +126,7 @@ export class ItemsList implements OnInit {
       isService: item.isService,
       isProduced: item.isProduced
     });
-    this.isFormOpen = true;
+    this.isDialogOpen = true;
   }
 
   closeForm(): void {
@@ -192,4 +206,33 @@ export class ItemsList implements OnInit {
   get f() {
     return this.form.controls;
   }
+
+filteredCategories: Category[] = [];
+selectedCategory?: Category;
+  searchCategories(event: any): void {
+  const query = (event.query ?? '').toLowerCase().trim();
+
+  if (!query) {
+    this.filteredCategories = [...this.categories];
+    return;
+  }
+
+  this.filteredCategories = this.categories.filter(c =>
+    c.name.toLowerCase().includes(query)
+  );
+}
+
+onCategorySelect(event: AutoCompleteSelectEvent): void {
+  const category = event.value as Category;
+
+  this.selectedCategory = category;
+  this.selectedCategoryId = category.id;
+
+  this.applyFilter();
+}
+onCategoryClear(): void {
+  this.selectedCategory = undefined;
+  this.selectedCategoryId = 0;
+  this.applyFilter();
+}
 }
